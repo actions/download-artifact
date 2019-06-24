@@ -1,0 +1,13 @@
+name: 'Download artifact'
+description: 'Download workflow artifacts'
+author: 'GitHub'
+inputs: 
+  name:
+    description: 'Artifact name'
+  path:
+    description: 'Destination path'    
+  source:
+    description: 'artifact source'    
+    default: current
+runs:
+  plugin: 'download'
