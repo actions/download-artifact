@@ -9,9 +9,9 @@ See [action.yml](action.yml)
 Basic (upload current working directory):
 ```yaml
 actions:
-- uses: actions/checkout@latest
+- uses: actions/checkout@master
 
-- uses: actions/download-artifact@latest
+- uses: actions/download-artifact@master
   with:
     name: my-artifact
     
@@ -22,9 +22,9 @@ Download to specific directory:
 ```yaml
 
 actions:
-- uses: actions/checkout@latest
+- uses: actions/checkout@master
 
-- uses: actions/download-artifact@latest
+- uses: actions/download-artifact@master
   with:
     name: my-artifact
     path: path/to/artifact
