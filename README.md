@@ -29,7 +29,7 @@ actions:
     name: my-artifact
     path: path/to/artifact
     
-- run: cat path/to/artifact/my-artifact
+- run: cat path/to/artifact
 ```
 
 # License
