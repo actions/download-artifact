@@ -8,7 +8,7 @@ See [action.yml](action.yml)
 
 Basic (upload current working directory):
 ```yaml
-actions:
+steps:
 - uses: actions/checkout@master
 
 - uses: actions/download-artifact@master
@@ -21,7 +21,7 @@ actions:
 Download to specific directory:
 ```yaml
 
-actions:
+steps:
 - uses: actions/checkout@master
 
 - uses: actions/download-artifact@master
