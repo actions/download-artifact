@@ -4,10 +4,8 @@ author: 'GitHub'
 inputs: 
   name:
     description: 'Artifact name'
+    required: true
   path:
     description: 'Destination path'    
-  source:
-    description: 'artifact source'    
-    default: current
 runs:
   plugin: 'download'
