@@ -2,6 +2,8 @@
 
 This downloads artifacts from your build.
 
+See also [upload-artifact](https://github.com/actions/upload-artifact).
+
 # Usage
 
 See [action.yml](action.yml)
