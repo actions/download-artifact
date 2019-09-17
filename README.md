@@ -6,7 +6,7 @@ This downloads artifacts from your build.
 
 See [action.yml](action.yml)
 
-Basic (upload current working directory):
+Basic (download to current working directory):
 ```yaml
 steps:
 - uses: actions/checkout@master
