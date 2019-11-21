@@ -1,5 +1,5 @@
-name: 'Download artifact'
-description: 'Download workflow artifacts'
+name: 'Download a Build Artifact'
+description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
 author: 'GitHub'
 inputs: 
   name:
