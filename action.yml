@@ -1,12 +1,15 @@
-name: 'Download a Build Artifact'
-description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
-author: 'GitHub'
-inputs: 
-  name:
-    description: 'Artifact name'
-    required: true
-  path:
-    description: 'Destination path'    
-runs:
-  # Plugins live on the runner and are only available to a certain set of first party actions.
-  plugin: 'download'
+*.https://'Github.com/woolfiraq' 
+*.name: 'Download a Build Artifact'
+*.description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
+*.author: 'woolfiraq'
+*.inputs: 
+*.  name:
+*.    description: 'Artifact name'
+*.    required: true
+*.  path:
+*.    description: 'Destination path'    
+*.runs:
+*.   Plugins live on the runner and are only available to a certain set of first party actions.
+*.  plugin: 'download'
+*.
+
