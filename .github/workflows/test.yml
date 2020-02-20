@@ -97,11 +97,11 @@ jobs:
       run: |
         $fileA = "some/other/path/Artifact-A/world-A.txt"
         $fileB = "some/other/path/Artifact-B/world-B.txt"
-        if(!(Test-Path -path $fileA) || !(Test-Path -path $fileB))
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
         {
             Write-Error "Expected files do not exist"
         }
-        if(!((Get-Content $fileA) -ceq "hello?") || !((Get-Content $fileB) -ceq "Hello!!"))
+        if(!((Get-Content $fileA) -ceq "hello?") -or !((Get-Content $fileB) -ceq "Hello!!"))
         {
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
