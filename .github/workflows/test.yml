@@ -59,7 +59,7 @@ jobs:
     - name: Create artifact B
       run: |
         mkdir -p path/to/artifact-B
-        echo hello!! > path/to/artifact-B/world-B.txt
+        echo Hello!! > path/to/artifact-B/world-B.txt
 
     - name: Upload artifact B
       uses: actions/upload-artifact@v1
@@ -74,21 +74,20 @@ jobs:
         name: 'Artifact-A'
         path: some/new/path
 
-    - name: Verify successful download - Windows
+    - name: Verify successful download
       run: |
         $file = "some/new/path/world-A.txt"
         if(!(Test-Path -path $file))
         {
             Write-Error "Expected file does not exist"
         }
-        $containsWord = $file | %{$_ -match "hello?"}
-        if(!($containsWord -contains $true))
+        if(!((Get-Content $file) -ceq "hello?"))
         {
             Write-Error "File contents of downloaded artifact are incorrect"
         }
       shell: pwsh
 
-    # Test downloading both artifacts
+    # Test downloading both artifacts at once
     - name: Download all Artifacts
       uses: ./
       with:
@@ -96,15 +95,13 @@ jobs:
 
     - name: Verify successful download
       run: |
-        $file1 = "some/other/path/Artifact-A/world-A.txt"
-        $file2 = "some/other/path/Artifact-B/world-B.txt"
-        if(!(Test-Path -path $file1) || !(Test-Path -path $file2))
+        $fileA = "some/other/path/Artifact-A/world-A.txt"
+        $fileB = "some/other/path/Artifact-B/world-B.txt"
+        if(!(Test-Path -path $fileA) || !(Test-Path -path $fileB))
         {
-            Write-Error "Expected file does not exist"
+            Write-Error "Expected files do not exist"
         }
-        $containsWordA = $file1 | %{$_ -match "hello?"}
-        $containsWordB = $file2 | %{$_ -match "hello!!"}
-        if(!($containsWordA -contains $true) || !($containsWordB -contains $true))
+        if(!((Get-Content $fileA) -ceq "hello?") || !((Get-Content $fileB) -ceq "Hello!!"))
         {
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
