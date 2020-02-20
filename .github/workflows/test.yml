@@ -74,7 +74,6 @@ jobs:
         path: some/new/path
 
     - name: Verify successful download - Windows
-      if: startsWith(matrix.os, 'windows')
       run: |
         $file = "some/new/path/world-A.txt"
         if(!(Test-Path -path $file))
@@ -94,7 +93,6 @@ jobs:
         path: some/other/path
 
     - name: Verify successful download
-      if: startsWith(matrix.os, 'windows')
       run: |
         $file1 = "some/other/path/Artifact-A/world-A.txt"
         $file2 = "some/other/path/Artifact-B/world-B.txt"
