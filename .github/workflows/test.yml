@@ -1,0 +1,113 @@
+name: Test
+on:
+  push:
+    branches:
+      - v2-preview
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - v2-preview
+    paths-ignore:
+      - '**.md'
+
+jobs:
+
+  build:
+    name: Build
+
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, macOS-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+
+    - name: npm install
+      run: npm install
+
+    - name: Compile
+      run: npm run build
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Format
+      run: npm run format-check 
+
+    # Test end-to-end by uploading two artifacts and then attempting to download them
+    - name: Create artifact A
+      run: |
+        mkdir -p path/to/artifact-A
+        echo hello? > path/to/artifact-A/world-A.txt
+
+    - name: Upload artifact A
+      uses: actions/upload-artifact@v1
+      with:
+        name: 'Artifact-A'
+        path: path/to/artifact-A
+
+    - name: Create artifact B
+      run: |
+        mkdir -p path/to/artifact-B
+        echo hello!! > path/to/artifact-B/world-B.txt
+
+    - name: Upload artifact B
+      uses: actions/upload-artifact@v1
+      with:
+        name: 'Artifact-B'
+        path: path/to/artifact-B
+
+    # Test downloading a single artifact
+    - name: Download artifact A
+      uses: ./
+        name: 'Artifact-A'
+        path: some/new/path
+
+    - name: Verify successful download - Windows
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        $file = "some/new/path/world-A.txt"
+        if(!(Test-Path -path $file))
+        {
+            Write-Error "Expected file does not exist"
+        }
+        $containsWord = $file | %{$_ -match "hello?"}
+        if(!($containsWord -contains $true))
+        {
+            Write-Error "File contents of downloaded artifact are incorrect"
+        }
+      shell: pwsh
+
+    # Test downloading both artifacts
+    - name: Download all Artifacts
+      uses: ./
+        path: some/other/path
+
+    - name: Verify successful download
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        $file1 = "some/other/path/Artifact-A/world-A.txt"
+        $file2 = "some/other/path/Artifact-B/world-B.txt"
+        if(!(Test-Path -path $file1) || !(Test-Path -path $file2))
+        {
+            Write-Error "Expected file does not exist"
+        }
+        $containsWordA = $file1 | %{$_ -match "hello?"}
+        $containsWordB = $file2 | %{$_ -match "hello!!"}
+        if(!($containsWordA -contains $true) || !($containsWordB -contains $true))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+      
