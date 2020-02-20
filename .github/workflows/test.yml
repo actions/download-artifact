@@ -70,6 +70,7 @@ jobs:
     # Test downloading a single artifact
     - name: Download artifact A
       uses: ./
+      with:
         name: 'Artifact-A'
         path: some/new/path
 
@@ -90,6 +91,7 @@ jobs:
     # Test downloading both artifacts
     - name: Download all Artifacts
       uses: ./
+      with:
         path: some/other/path
 
     - name: Verify successful download
