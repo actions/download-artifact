@@ -27,7 +27,7 @@
     "url": "https://github.com/actions/download-artifact/issues"
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
-  "dependencies": {
+  "devDependencies": {
     "@actions/artifact": "^0.1.0",
     "@actions/core": "^1.2.2",
     "@typescript-eslint/parser": "^2.20.0",

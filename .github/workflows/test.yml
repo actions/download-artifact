@@ -44,22 +44,19 @@ jobs:
     - name: Format
       run: npm run format-check 
 
-    # Test end-to-end by uploading two artifacts and then attempting to download them
-    - name: Create artifact A
+    # Test end-to-end by uploading two artifacts and then downloading them
+    - name: Create artifacts
       run: |
         mkdir -p path/to/artifact-A
-        echo hello? > path/to/artifact-A/world-A.txt
-
+        mkdir -p path/to/artifact-B
+        echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
+        echo "Hello world from file B" > path/to/artifact-B/file-B.txt
+    
     - name: Upload artifact A
       uses: actions/upload-artifact@v1
       with:
         name: 'Artifact-A'
         path: path/to/artifact-A
-
-    - name: Create artifact B
-      run: |
-        mkdir -p path/to/artifact-B
-        echo Hello!! > path/to/artifact-B/world-B.txt
 
     - name: Upload artifact B
       uses: actions/upload-artifact@v1
@@ -76,12 +73,12 @@ jobs:
 
     - name: Verify successful download
       run: |
-        $file = "some/new/path/world-A.txt"
+        $file = "some/new/path/file-A.txt"
         if(!(Test-Path -path $file))
         {
             Write-Error "Expected file does not exist"
         }
-        if(!((Get-Content $file) -ceq "hello?"))
+        if(!((Get-Content $file) -ceq "Lorem ipsum dolor sit amet"))
         {
             Write-Error "File contents of downloaded artifact are incorrect"
         }
@@ -95,13 +92,13 @@ jobs:
 
     - name: Verify successful download
       run: |
-        $fileA = "some/other/path/Artifact-A/world-A.txt"
-        $fileB = "some/other/path/Artifact-B/world-B.txt"
+        $fileA = "some/other/path/Artifact-A/file-A.txt"
+        $fileB = "some/other/path/Artifact-B/file-B.txt"
         if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
         {
             Write-Error "Expected files do not exist"
         }
-        if(!((Get-Content $fileA) -ceq "hello?") -or !((Get-Content $fileB) -ceq "Hello!!"))
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
         {
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
