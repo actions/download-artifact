@@ -2082,14 +2082,21 @@ function run() {
             const artifactClient = artifact.create();
             if (!name) {
                 // download all artifacts
-                yield artifactClient.downloadAllArtifacts(path);
+                const downloadResponse = yield artifactClient.downloadAllArtifacts(path);
+                core.info(`There were ${downloadResponse.length} artifacts downloaded`);
+                for (const artifact of downloadResponse) {
+                    core.info(`Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`);
+                }
             }
             else {
                 // download a single artifact
-                yield artifactClient.downloadArtifact(name, path, {
+                const downloadOptions = {
                     createArtifactFolder: false
-                });
+                };
+                const downloadResponse = yield artifactClient.downloadArtifact(name, path, downloadOptions);
+                core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
+            core.info('Artifact download has finished successfully');
         }
         catch (err) {
             core.setFailed(err.message);
