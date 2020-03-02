@@ -31,7 +31,7 @@ steps:
     name: my-artifact
     path: path/to/artifact
     
-- run: cat path/to/artifact
+- run: ls path/to/artifact
 ```
 
 # License
