@@ -45,6 +45,7 @@ jobs:
       run: npm run format-check 
 
     # Test end-to-end by uploading two artifacts and then downloading them
+    # Once upload-artifact v2 is out of preview, switch over
     - name: Create artifacts
       run: |
         mkdir -p path/to/artifact-A

@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "devDependencies": {
-    "@actions/artifact": "^0.1.0",
+    "@actions/artifact": "^0.2.0",
     "@actions/core": "^1.2.2",
     "@typescript-eslint/parser": "^2.20.0",
     "@zeit/ncc": "^0.21.1",
