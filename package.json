@@ -1,0 +1,41 @@
+{
+  "name": "download-artifact",
+  "version": "2.0.0",
+  "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "release": "ncc build src/download-artifact.ts && git add -f dist/",
+    "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:build\"",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "lint": "eslint **/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/download-artifact.git"
+  },
+  "keywords": [
+    "Actions",
+    "GitHub",
+    "Artifacts",
+    "Download"
+  ],
+  "author": "GitHub",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/actions/download-artifact/issues"
+  },
+  "homepage": "https://github.com/actions/download-artifact#readme",
+  "devDependencies": {
+    "@actions/artifact": "^0.2.0",
+    "@actions/core": "^1.2.2",
+    "@typescript-eslint/parser": "^2.20.0",
+    "@zeit/ncc": "^0.21.1",
+    "concurrently": "^5.1.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-github": "^3.4.1",
+    "prettier": "^1.19.1",
+    "typescript": "^3.7.5"
+  }
+}
