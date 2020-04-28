@@ -1,8 +1,15 @@
-# Download-Artifact v2 Preview
+# Download-Artifact v2
 
 This downloads artifacts from your build
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
+
+# What's new
+
+- Download all artifacts at once
+- Port entire action to typescript from a runner plugin so it is easier to collaborate and accept contributions
+
+Refer [here](https://github.com/actions/download-artifact/tree/v1) for the previous version
 
 # Usage
 
@@ -15,25 +22,27 @@ Basic (download to the current working directory):
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2-preview
+- uses: actions/download-artifact@v2
   with:
     name: my-artifact
     
-- run: cat my-artifact
+- name: Display structure of downloaded files
+  run: ls -R
 ```
 
 Download to a specific directory:
 ```yaml
-
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2-preview
+- uses: actions/download-artifact@v2
   with:
     name: my-artifact
     path: path/to/artifact
     
-- run: cat path/to/artifact
+- name: Display structure of downloaded files
+  run: ls -R
+  working-directory: path/to/artifact
 ```
 # Download All Artifacts
 
@@ -53,11 +62,13 @@ Download all artifacts to a specific directory
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2-preview
+- uses: actions/download-artifact@v2
   with:
     path: path/to/artifacts
     
-- run: cat path/to/artifacts
+- name: Display structure of downloaded files
+  run: ls -R
+  working-directory: path/to/artifacts
 ```
 
 Download all artifacts to the current working directory
@@ -65,8 +76,15 @@ Download all artifacts to the current working directory
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2-preview
+- uses: actions/download-artifact@v2
+
+- name: Display structure of downloaded files
+  run: ls -R
 ```
+
+# @actions/artifact package
+
+Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/master/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
 
 
 # License
