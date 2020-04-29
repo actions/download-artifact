@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     } else {
       // download a single artifact
       const downloadOptions = {
-        createArtifactFolder: false
+        createArtifactFolder: true
       }
       const downloadResponse = await artifactClient.downloadArtifact(
         name,
