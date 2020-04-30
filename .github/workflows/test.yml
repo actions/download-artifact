@@ -1,6 +1,8 @@
 name: Test
 on:
   push:
+    branches:
+      - master
     paths-ignore:
       - '**.md'
   pull_request:
@@ -64,7 +66,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: 'Artifact-B'
-        path: path/to/artifact-B
+        path: path/to/artifact-git
 
     - name: Download artifact A with no extra folder (default)
       uses: ./
@@ -77,7 +79,7 @@ jobs:
       run: |
         scripts/test-artifact-file.sh "download/with/artifact-folder/false/file-A.txt" "${{ env.non-gzip-artifact-content }}"
 
-    - name: Download artifact A with create-folder set to true
+    - name: Download artifact A with artifact-folder set to true
       uses: ./
       with:
         name: 'Artifact-A'
