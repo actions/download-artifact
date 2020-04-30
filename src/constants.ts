@@ -1,4 +1,5 @@
 export enum Inputs {
   Name = 'name',
-  Path = 'path'
+  Path = 'path',
+  ArtifactFolder = 'artifact-folder'
 }

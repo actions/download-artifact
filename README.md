@@ -44,9 +44,39 @@ steps:
   run: ls -R
   working-directory: path/to/artifact
 ```
+
+Download an artifact and create an extra directory
+```yaml
+steps:
+- uses: actions/checkout@v2
+
+- uses: actions/download-artifact@v2
+  with:
+    name: my-artifact
+    path: path/to/artifact
+    artifact-folder: true
+    
+- name: Display structure of downloaded files
+  run: ls -R
+  working-directory: path/to/artifact
+```
+
+If `artifact-folder` is set to `true`. An extra directory denoted by the name of the artifact will be created
+```
+   path/to/artifact/
+      my-artifact/
+          ... contents of my-artifact
+```
+
+If `artifact-folder` is set to `false` (the default), there will be no extra folder created
+```
+   path/to/artifact/
+      ... contents of my-artifact
+```
+
 # Download All Artifacts
 
-If the `name` input parameter is not provided, all artifacts will be downloaded. To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.
+If the `name` input parameter is not provided, all artifacts will be downloaded. To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact. Currently the `artifact-folder` input-parameter is not respected when downloading all artifacts.
 
 Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the directory is `etc/usr/artifacts/`, the directory structure will look like this:
 ```

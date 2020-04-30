@@ -8,6 +8,9 @@ inputs:
   path:
     description: 'Destination path'
     required: false
+  artifact-folder:
+    description: 'Denotes if an extra directory is created for any artifacts that are downloaded'
+    default: 'false'
 runs:
   using: 'node12'
   main: 'dist/index.js'

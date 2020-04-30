@@ -42,12 +42,17 @@ jobs:
 
     # Test end-to-end by uploading two artifacts and then downloading them
     # Once upload-artifact v2 is out of preview, switch over
+    - name: Set artifact file contents
+      run: |
+        echo "::set-env name=non-gzip-artifact-content::hello"
+        echo "::set-env name=gzip-artifact-content::Some large amount of text that has a compression ratio that is greater than 100%. If greater than 100%, gzip is used to upload the file"    
+        
     - name: Create artifacts
       run: |
         mkdir -p path/to/artifact-A
         mkdir -p path/to/artifact-B
-        echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
-        echo "Hello world from file B" > path/to/artifact-B/file-B.txt
+        echo ${{ env.non-gzip-artifact-content }} > path/to/artifact-A/file-A.txt
+        echo ${{ env.gzip-artifact-content }} > path/to/artifact-B/file-B.txt
     
     - name: Upload artifact A
       uses: actions/upload-artifact@v1
@@ -61,25 +66,28 @@ jobs:
         name: 'Artifact-B'
         path: path/to/artifact-B
 
-    # Test downloading a single artifact
-    - name: Download artifact A
+    - name: Download artifact A with no extra folder (default)
       uses: ./
       with:
         name: 'Artifact-A'
-        path: some/new/path
+        path: download/with/artifact-folder/false
 
-    - name: Verify successful download
+    - name: Verify successful download with no extra folder
+      shell: bash
       run: |
-        $file = "some/new/path/file-A.txt"
-        if(!(Test-Path -path $file))
-        {
-            Write-Error "Expected file does not exist"
-        }
-        if(!((Get-Content $file) -ceq "Lorem ipsum dolor sit amet"))
-        {
-            Write-Error "File contents of downloaded artifact are incorrect"
-        }
-      shell: pwsh
+        scripts/test-artifact-file.sh "download/with/artifact-folder/false/file-A.txt" "${{ env.non-gzip-artifact-content }}"
+
+    - name: Download artifact A with create-folder set to true
+      uses: ./
+      with:
+        name: 'Artifact-A'
+        path: download/with/artifact-folder/true
+        artifact-folder: true
+
+    - name: Verify successful download with an extra folder
+      shell: bash
+      run: |
+        scripts/test-artifact-file.sh "download/with/artifact-folder/true/Artifact-A/file-A.txt" "${{ env.non-gzip-artifact-content }}"
 
     # Test downloading both artifacts at once
     - name: Download all Artifacts
@@ -87,18 +95,8 @@ jobs:
       with:
         path: some/other/path
 
-    - name: Verify successful download
+    - name: Verify downloadAllArtifacts()
+      shell: bash
       run: |
-        $fileA = "some/other/path/Artifact-A/file-A.txt"
-        $fileB = "some/other/path/Artifact-B/file-B.txt"
-        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
-        {
-            Write-Error "Expected files do not exist"
-        }
-        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
-        {
-            Write-Error "File contents of downloaded artifacts are incorrect"
-        }
-      shell: pwsh
-
-      
+        scripts/test-artifact-file.sh "some/other/path/Artifact-A/file-A.txt" "${{ env.non-gzip-artifact-content }}"
+        scripts/test-artifact-file.sh "some/other/path/Artifact-B/file-B.txt" "${{ env.gzip-artifact-content }}" 
