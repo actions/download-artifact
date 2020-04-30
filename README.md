@@ -44,6 +44,22 @@ steps:
   run: ls -R
   working-directory: path/to/artifact
 ```
+
+## Compatibility between `v1` and `v2`
+
+When using `download-artifact@v1`, a directory denoted by the name of the artifact would be created. All of the contents would ne downloaded to this directory.
+```
+   path/to/artifact/
+      my-artifact/
+          ... contents of my-artifact
+```
+
+With `v2`, there is no longer an extra directory that is created. All the contents are downloaded to the current working directory or to `path` if specified.
+```
+   path/to/artifact/
+      ... contents of my-artifact
+```
+
 # Download All Artifacts
 
 If the `name` input parameter is not provided, all artifacts will be downloaded. To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.
