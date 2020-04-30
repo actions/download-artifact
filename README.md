@@ -60,6 +60,15 @@ With `v2`, there is no longer an extra directory that is created if the `path` i
       ... contents of my-artifact
 ```
 
+To maintain the same behavior for `v2`, you can set the `path` to the name of the artifact so an extra directory gets created.
+```
+- uses: actions/download-artifact@v2
+  with:
+    name: my-artifact
+    path: my-artifact
+```
+
+
 # Download All Artifacts
 
 If the `name` input parameter is not provided, all artifacts will be downloaded. To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.
