@@ -47,7 +47,7 @@ jobs:
     - name: Set artifact file contents
       run: |
         echo "::set-env name=non-gzip-artifact-content::hello"
-        echo "::set-env name=gzip-artifact-content::Some large amount of text that has a compression ratio that is greater than 100%. If the compression ratio is greater than 100%, gzip is used to upload the file."
+        echo "::set-env name=gzip-artifact-content::Some_large_amount_of_text_that_has_a_compression_ratio_that_is_greater_than_100%._If_the_compression_ratio_is_greater_than_100%_gzip_is_used_to_upload_the_file."
         
     - name: Create artifacts
       run: |
