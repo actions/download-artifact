@@ -6520,6 +6520,7 @@ var Inputs;
 (function (Inputs) {
     Inputs["Name"] = "name";
     Inputs["Path"] = "path";
+    Inputs["ArtifactFolder"] = "artifact-folder";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 
 
@@ -6576,9 +6577,19 @@ function run() {
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
+            const artifactFolder = core.getInput(constants_1.Inputs.ArtifactFolder, {
+                required: false
+            });
+            // parse string input to a boolean
+            const isFolderCreated = artifactFolder.toLocaleLowerCase() === 'true';
             const artifactClient = artifact.create();
             if (!name) {
-                // download all artifacts
+                /** Download all artifacts at once
+                 *
+                 * When downloading all artifacts at once, a separate folder gets created for each artifact. There is currently no option to use
+                 * the artifactFolder input to specify if a folder should or should not be created for each artifact. Some extra work will have to be done
+                 * in the @actions/artifact package
+                 */
                 const downloadResponse = yield artifactClient.downloadAllArtifacts(path);
                 core.info(`There were ${downloadResponse.length} artifacts downloaded`);
                 for (const artifact of downloadResponse) {
@@ -6588,7 +6599,7 @@ function run() {
             else {
                 // download a single artifact
                 const downloadOptions = {
-                    createArtifactFolder: false
+                    createArtifactFolder: isFolderCreated
                 };
                 const downloadResponse = yield artifactClient.downloadArtifact(name, path, downloadOptions);
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
