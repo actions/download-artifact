@@ -47,16 +47,16 @@ steps:
 
 ## Compatibility between `v1` and `v2`
 
-When using `download-artifact@v1`, a directory denoted by the name of the artifact would be created. All of the contents would ne downloaded to this directory.
+When using `download-artifact@v1`, a directory denoted by the name of the artifact would be created if the `path` input was not provided. All of the contents would be downloaded to this directory.
 ```
-   path/to/artifact/
+   current/working/directory/
       my-artifact/
           ... contents of my-artifact
 ```
 
-With `v2`, there is no longer an extra directory that is created. All the contents are downloaded to the current working directory or to `path` if specified.
+With `v2`, there is no longer an extra directory that is created if the `path` input is not provided. All the contents are downloaded to the current working directory.
 ```
-   path/to/artifact/
+   current/working/directory/
       ... contents of my-artifact
 ```
 
