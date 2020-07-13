@@ -6581,6 +6581,10 @@ var Inputs;
     Inputs["Name"] = "name";
     Inputs["Path"] = "path";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
+var Outputs;
+(function (Outputs) {
+    Outputs["DownloadPath"] = "downloadPath";
+})(Outputs = exports.Outputs || (exports.Outputs = {}));
 
 
 /***/ }),
@@ -6639,6 +6643,8 @@ function run() {
             const artifactClient = artifact.create();
             if (!name) {
                 // download all artifacts
+                core.info('No artifact name specified, downloading all artifacts');
+                core.info('Creating an extra directory for each artifact that is being downloaded');
                 const downloadResponse = yield artifactClient.downloadAllArtifacts(path);
                 core.info(`There were ${downloadResponse.length} artifacts downloaded`);
                 for (const artifact of downloadResponse) {
@@ -6647,12 +6653,15 @@ function run() {
             }
             else {
                 // download a single artifact
+                core.info(`Starting download for ${name}`);
                 const downloadOptions = {
                     createArtifactFolder: false
                 };
                 const downloadResponse = yield artifactClient.downloadArtifact(name, path, downloadOptions);
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
+            // output the directory that the artifact(s) was/were downloaded to
+            core.setOutput(constants_1.Outputs.DownloadPath, path);
             core.info('Artifact download has finished successfully');
         }
         catch (err) {
