@@ -6583,7 +6583,7 @@ var Inputs;
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
-    Outputs["DownloadPath"] = "downloadPath";
+    Outputs["DownloadPath"] = "download-path";
 })(Outputs = exports.Outputs || (exports.Outputs = {}));
 
 
@@ -6641,8 +6641,6 @@ function run() {
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
-            const testing = path_1.resolve(path);
-            core.info(`Will tilde expansion work... ${testing}`);
             const artifactClient = artifact.create();
             if (!name) {
                 // download all artifacts

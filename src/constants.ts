@@ -3,5 +3,5 @@ export enum Inputs {
   Path = 'path'
 }
 export enum Outputs {
-  DownloadPath = 'downloadPath'
+  DownloadPath = 'download-path'
 }

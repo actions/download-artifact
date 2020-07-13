@@ -8,9 +8,6 @@ async function run(): Promise<void> {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
 
-    const testing = resolve(path)
-    core.info(`Will tilde expansion work... ${testing}`)
-
     const artifactClient = artifact.create()
     if (!name) {
       // download all artifacts
