@@ -6634,12 +6634,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const artifact = __importStar(__webpack_require__(214));
+const path_1 = __webpack_require__(622);
 const constants_1 = __webpack_require__(694);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
+            const testing = path_1.resolve(path);
+            core.info(`Will tilde expansion work... ${testing}`);
             const artifactClient = artifact.create();
             if (!name) {
                 // download all artifacts
@@ -6661,7 +6664,7 @@ function run() {
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
             // output the directory that the artifact(s) was/were downloaded to
-            core.setOutput(constants_1.Outputs.DownloadPath, path);
+            core.setOutput(constants_1.Outputs.DownloadPath, path_1.resolve(path));
             core.info('Artifact download has finished successfully');
         }
         catch (err) {

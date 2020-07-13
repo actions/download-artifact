@@ -1,11 +1,15 @@
 import * as core from '@actions/core'
 import * as artifact from '@actions/artifact'
+import {resolve} from 'path'
 import {Inputs, Outputs} from './constants'
 
 async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
+
+    const testing = resolve(path)
+    core.info(`Will tilde expansion work... ${testing}`)
 
     const artifactClient = artifact.create()
     if (!name) {
@@ -37,7 +41,7 @@ async function run(): Promise<void> {
       )
     }
     // output the directory that the artifact(s) was/were downloaded to
-    core.setOutput(Outputs.DownloadPath, path)
+    core.setOutput(Outputs.DownloadPath, resolve(path))
     core.info('Artifact download has finished successfully')
   } catch (err) {
     core.setFailed(err.message)

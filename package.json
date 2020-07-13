@@ -30,6 +30,7 @@
   "devDependencies": {
     "@actions/artifact": "^0.3.1",
     "@actions/core": "^1.2.4",
+    "@types/node": "^14.0.22",
     "@typescript-eslint/parser": "^2.30.0",
     "@zeit/ncc": "^0.22.1",
     "concurrently": "^5.2.0",
