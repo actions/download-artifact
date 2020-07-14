@@ -38,6 +38,7 @@ async function run(): Promise<void> {
       )
     }
     // output the directory that the artifact(s) was/were downloaded to
+    // if no path is provided, an empty string resolves to the current working directory
     core.setOutput(Outputs.DownloadPath, resolve(path))
     core.info('Artifact download has finished successfully')
   } catch (err) {

@@ -6662,6 +6662,7 @@ function run() {
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
             // output the directory that the artifact(s) was/were downloaded to
+            // if no path is provided, an empty string resolves to the current working directory
             core.setOutput(constants_1.Outputs.DownloadPath, path_1.resolve(path));
             core.info('Artifact download has finished successfully');
         }

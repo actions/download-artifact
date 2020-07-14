@@ -108,7 +108,7 @@ steps:
 
 # Download path output
 
-Not sure where your artifact was downloaded to? The `download-path` step output can help you out. Just make sure to be aware of the extra directory that is created if downloading all artifacts (no name specified).
+The `download-path` step output contains information regarding where the artifact was downloaded to. This output can be used for a variety of purposes such as logging or as input to other actions. Be aware of the extra directory that is created if downloading all artifacts (no name specified).
 
 ```yaml
 steps:
@@ -120,9 +120,11 @@ steps:
     name: 'my-artifact'
     path: path/to/artifacts
 
-- name: 'Output download path'
+- name: 'Echo download path'
   run: echo ${{steps.download.outputs.download-path}}
 ```
+
+> Note: The `id` defined in the `download/artifact` step must match the `id` defined in the `echo` step (i.e `steps.[ID].outputs.download-path`)
 
 # @actions/artifact package
 
