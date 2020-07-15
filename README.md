@@ -7,6 +7,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
 # What's new
 
 - Download all artifacts at once
+- Output parameter for the download path
 - Port entire action to typescript from a runner plugin so it is easier to collaborate and accept contributions
 
 Refer [here](https://github.com/actions/download-artifact/tree/v1) for the previous version
