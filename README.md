@@ -71,8 +71,7 @@ To maintain the same behavior for `v2`, you can set the `path` to the name of th
 
 # Download All Artifacts
 
-If the `name` input parameter is not provided, all artifacts will be downloaded. To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.
-
+If the `name` input parameter is not provided, all artifacts will be downloaded. **To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.**
 Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the directory is `etc/usr/artifacts/`, the directory structure will look like this:
 ```
   etc/usr/artifacts/
@@ -106,6 +105,26 @@ steps:
 - name: Display structure of downloaded files
   run: ls -R
 ```
+
+# Download path output
+
+The `download-path` step output contains information regarding where the artifact was downloaded to. This output can be used for a variety of purposes such as logging or as input to other actions. Be aware of the extra directory that is created if downloading all artifacts (no name specified).
+
+```yaml
+steps:
+- uses: actions/checkout@v2
+
+- uses: actions/download-artifact@v2
+  id: download
+  with:
+    name: 'my-artifact'
+    path: path/to/artifacts
+
+- name: 'Echo download path'
+  run: echo ${{steps.download.outputs.download-path}}
+```
+
+> Note: The `id` defined in the `download/artifact` step must match the `id` defined in the `echo` step (i.e `steps.[ID].outputs.download-path`)
 
 # @actions/artifact package
 
