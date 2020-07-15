@@ -129,7 +129,7 @@ steps:
 
 # @actions/artifact package
 
-Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/master/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
+Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
 
 
 # License
