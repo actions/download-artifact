@@ -6642,8 +6642,13 @@ function run() {
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
-            // resolve tilde expansion
-            const resolvedPath = path_1.resolve(path.replace('~', os.homedir));
+            let resolvedPath;
+            if (path === '~' || path.startsWith(`~${path_1.sep}`)) {
+                resolvedPath = path_1.resolve(path.replace('~', os.homedir()));
+            }
+            else {
+                resolvedPath = path_1.resolve(path);
+            }
             core.debug(`Resolved path is ${resolvedPath}`);
             const artifactClient = artifact.create();
             if (!name) {

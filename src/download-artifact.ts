@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as artifact from '@actions/artifact'
 import * as os from 'os'
-import {resolve} from 'path'
+import {resolve, sep} from 'path'
 import {Inputs, Outputs} from './constants'
 
 async function run(): Promise<void> {
@@ -9,8 +9,12 @@ async function run(): Promise<void> {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
 
-    // resolve tilde expansion
-    const resolvedPath = resolve(path.replace('~', os.homedir))
+    let resolvedPath
+    if (path === '~' || path.startsWith(`~${sep}`)) {
+      resolvedPath = resolve(path.replace('~', os.homedir()))
+    } else {
+      resolvedPath = resolve(path)
+    }
     core.debug(`Resolved path is ${resolvedPath}`)
 
     const artifactClient = artifact.create()
