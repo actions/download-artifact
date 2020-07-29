@@ -46,6 +46,15 @@ steps:
   working-directory: path/to/artifact
 ```
 
+Basic tilde expansion is supported for the `path` input
+
+```yaml
+  - uses: actions/download-artifact@v2
+    with:
+      name: my-artifact
+      path: ~/download/path
+```
+
 ## Compatibility between `v1` and `v2`
 
 When using `download-artifact@v1`, a directory denoted by the name of the artifact would be created if the `path` input was not provided. All of the contents would be downloaded to this directory.
