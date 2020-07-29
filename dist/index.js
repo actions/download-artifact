@@ -6644,6 +6644,7 @@ function run() {
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
             // resolve tilde expansion
             const resolvedPath = path_1.resolve(path.replace('~', os.homedir));
+            core.debug(`Resolved path is ${resolvedPath}`);
             const artifactClient = artifact.create();
             if (!name) {
                 // download all artifacts

@@ -11,6 +11,7 @@ async function run(): Promise<void> {
 
     // resolve tilde expansion
     const resolvedPath = resolve(path.replace('~', os.homedir))
+    core.debug(`Resolved path is ${resolvedPath}`)
 
     const artifactClient = artifact.create()
     if (!name) {
