@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as artifact from '@actions/artifact'
+import * as os from 'os'
 import {resolve} from 'path'
 import {Inputs, Outputs} from './constants'
 
@@ -8,6 +9,9 @@ async function run(): Promise<void> {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
 
+    // resolve tilde expansion
+    const resolvedPath = resolve(path.replace('~', os.homedir))
+
     const artifactClient = artifact.create()
     if (!name) {
       // download all artifacts
@@ -15,7 +19,9 @@ async function run(): Promise<void> {
       core.info(
         'Creating an extra directory for each artifact that is being downloaded'
       )
-      const downloadResponse = await artifactClient.downloadAllArtifacts(path)
+      const downloadResponse = await artifactClient.downloadAllArtifacts(
+        resolvedPath
+      )
       core.info(`There were ${downloadResponse.length} artifacts downloaded`)
       for (const artifact of downloadResponse) {
         core.info(
@@ -30,7 +36,7 @@ async function run(): Promise<void> {
       }
       const downloadResponse = await artifactClient.downloadArtifact(
         name,
-        path,
+        resolvedPath,
         downloadOptions
       )
       core.info(
@@ -39,7 +45,7 @@ async function run(): Promise<void> {
     }
     // output the directory that the artifact(s) was/were downloaded to
     // if no path is provided, an empty string resolves to the current working directory
-    core.setOutput(Outputs.DownloadPath, resolve(path))
+    core.setOutput(Outputs.DownloadPath, resolvedPath)
     core.info('Artifact download has finished successfully')
   } catch (err) {
     core.setFailed(err.message)

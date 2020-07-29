@@ -6634,6 +6634,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const artifact = __importStar(__webpack_require__(214));
+const os = __importStar(__webpack_require__(87));
 const path_1 = __webpack_require__(622);
 const constants_1 = __webpack_require__(694);
 function run() {
@@ -6641,12 +6642,14 @@ function run() {
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
+            // resolve tilde expansion
+            const resolvedPath = path_1.resolve(path.replace('~', os.homedir));
             const artifactClient = artifact.create();
             if (!name) {
                 // download all artifacts
                 core.info('No artifact name specified, downloading all artifacts');
                 core.info('Creating an extra directory for each artifact that is being downloaded');
-                const downloadResponse = yield artifactClient.downloadAllArtifacts(path);
+                const downloadResponse = yield artifactClient.downloadAllArtifacts(resolvedPath);
                 core.info(`There were ${downloadResponse.length} artifacts downloaded`);
                 for (const artifact of downloadResponse) {
                     core.info(`Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`);
@@ -6658,12 +6661,12 @@ function run() {
                 const downloadOptions = {
                     createArtifactFolder: false
                 };
-                const downloadResponse = yield artifactClient.downloadArtifact(name, path, downloadOptions);
+                const downloadResponse = yield artifactClient.downloadArtifact(name, resolvedPath, downloadOptions);
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
             // output the directory that the artifact(s) was/were downloaded to
             // if no path is provided, an empty string resolves to the current working directory
-            core.setOutput(constants_1.Outputs.DownloadPath, path_1.resolve(path));
+            core.setOutput(constants_1.Outputs.DownloadPath, resolvedPath);
             core.info('Artifact download has finished successfully');
         }
         catch (err) {
