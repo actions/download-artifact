@@ -46,8 +46,7 @@ steps:
   working-directory: path/to/artifact
 ```
 
-Basic tilde expansion is supported for the `path` input
-
+Basic tilde expansion is supported for the `path` input:
 ```yaml
   - uses: actions/download-artifact@v2
     with:
