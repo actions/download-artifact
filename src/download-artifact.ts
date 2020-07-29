@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as artifact from '@actions/artifact'
 import * as os from 'os'
-import {resolve, sep} from 'path'
+import {resolve} from 'path'
 import {Inputs, Outputs} from './constants'
 
 async function run(): Promise<void> {
@@ -10,7 +10,8 @@ async function run(): Promise<void> {
     const path = core.getInput(Inputs.Path, {required: false})
 
     let resolvedPath
-    if (path === '~' || path.startsWith(`~${sep}`)) {
+    // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
+    if (path.startsWith(`~`)) {
       resolvedPath = resolve(path.replace('~', os.homedir()))
     } else {
       resolvedPath = resolve(path)

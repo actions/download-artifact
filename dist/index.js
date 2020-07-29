@@ -6643,7 +6643,8 @@ function run() {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
             let resolvedPath;
-            if (path === '~' || path.startsWith(`~${path_1.sep}`)) {
+            // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
+            if (path.startsWith(`~`)) {
                 resolvedPath = path_1.resolve(path.replace('~', os.homedir()));
             }
             else {
