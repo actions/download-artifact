@@ -135,10 +135,6 @@ steps:
 
 > Note: The `id` defined in the `download/artifact` step must match the `id` defined in the `echo` step (i.e `steps.[ID].outputs.download-path`)
 
-# @actions/artifact package
-
-Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
-
 # Limitations
 
 ### Permission Loss
@@ -163,6 +159,10 @@ If file permissions and case sensitivity are required, you can `tar` all of your
       name: my-artifact
       path: my_files.tar    
 ```
+
+# @actions/artifact package
+
+Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
 
 # License
 
