@@ -139,6 +139,30 @@ steps:
 
 Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
 
+# Limitations
+
+## Permission Loss
+
+:exclamation: File permissions are not maintained during artifact upload. For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
+
+## Case Insensitive Uploads
+
+:exclamation: File uploads are case insensitive. If you upload `A.txt` and `a.txt` with the same root path, only a single file will be saved and available during download.
+
+## Maintaining file permissions and case sensitive files
+
+If file permissions and case sensitivity are required, you can `tar` all of your files together before artifact upload. Post download, the `tar` file will maintain file permissions and case sensitivity.
+
+```yaml
+  - name: 'Tar files'
+    run: tar -cvf my_files.tar /path/to/my/directory
+
+  - name: 'Upload Artifact'
+    uses: actions/upload-artifact@v2
+    with:
+      name: my-artifact
+      path: my_files.tar    
+```
 
 # License
 
