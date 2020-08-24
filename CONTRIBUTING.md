@@ -14,7 +14,7 @@ Please note that this project is released with a [Contributor Code of Conduct][c
 ## Found a bug?
 
 - **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/actions/download-artifact/issues).
-- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/actions/download-artifact/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or a **reproducable test case** demonstrating the expected behavior that is not occurring.
+- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/actions/download-artifact/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or a **reproducible test case** demonstrating the expected behavior that is not occurring.
 - If possible, use the relevant bug report templates to create the issue.
 
 ## What should I know before submitting a pull request or issue
@@ -33,7 +33,7 @@ Artifact related issues will be tracked in this repository so please do not open
 7. Make sure your code passes linting: `npm run lint`
 8. Update `dist/index.js` using `npm run release`. This creates a single javascript file that is used as an entry-point for the action
 7. Push to your fork and [submit a pull request][pr]
-8. Pat your self on the back and wait for your pull request to be reviewed and merged.
+8. Pat yourself on the back and wait for your pull request to be reviewed and merged.
 
 Here are a few things you can do that will increase the likelihood of your pull request being accepted:
 
