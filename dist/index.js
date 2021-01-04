@@ -4881,6 +4881,88 @@ exports.getState = getState;
 
 /***/ }),
 
+/***/ 489:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(870);
+const core = __importStar(__webpack_require__(470));
+const config_variables_1 = __webpack_require__(401);
+function retry(name, operation, customErrorMessages, maxAttempts) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let response = undefined;
+        let statusCode = undefined;
+        let isRetryable = false;
+        let errorMessage = '';
+        let customErrorInformation = undefined;
+        let attempt = 1;
+        while (attempt <= maxAttempts) {
+            try {
+                response = yield operation();
+                statusCode = response.message.statusCode;
+                if (utils_1.isSuccessStatusCode(statusCode)) {
+                    return response;
+                }
+                // Extra error information that we want to display if a particular response code is hit
+                if (statusCode) {
+                    customErrorInformation = customErrorMessages.get(statusCode);
+                }
+                isRetryable = utils_1.isRetryableStatusCode(statusCode);
+                errorMessage = `Artifact service responded with ${statusCode}`;
+            }
+            catch (error) {
+                isRetryable = true;
+                errorMessage = error.message;
+            }
+            if (!isRetryable) {
+                core.info(`${name} - Error is not retryable`);
+                if (response) {
+                    utils_1.displayHttpDiagnostics(response);
+                }
+                break;
+            }
+            core.info(`${name} - Attempt ${attempt} of ${maxAttempts} failed with error: ${errorMessage}`);
+            yield utils_1.sleep(utils_1.getExponentialRetryTimeInMilliseconds(attempt));
+            attempt++;
+        }
+        if (response) {
+            utils_1.displayHttpDiagnostics(response);
+        }
+        if (customErrorInformation) {
+            throw Error(`${name} failed: ${customErrorInformation}`);
+        }
+        throw Error(`${name} failed: ${errorMessage}`);
+    });
+}
+exports.retry = retry;
+function retryHttpClientRequest(name, method, customErrorMessages = new Map(), maxAttempts = config_variables_1.getRetryLimit()) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield retry(name, method, customErrorMessages, maxAttempts);
+    });
+}
+exports.retryHttpClientRequest = retryHttpClientRequest;
+//# sourceMappingURL=requestUtils.js.map
+
+/***/ }),
+
 /***/ 532:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -5997,8 +6079,10 @@ const util_1 = __webpack_require__(669);
 const url_1 = __webpack_require__(835);
 const perf_hooks_1 = __webpack_require__(630);
 const status_reporter_1 = __webpack_require__(176);
+const http_client_1 = __webpack_require__(539);
 const http_manager_1 = __webpack_require__(452);
 const upload_gzip_1 = __webpack_require__(647);
+const requestUtils_1 = __webpack_require__(489);
 const stat = util_1.promisify(fs.stat);
 class UploadHttpClient {
     constructor() {
@@ -6026,20 +6110,22 @@ class UploadHttpClient {
             // use the first client from the httpManager, `keep-alive` is not used so the connection will close immediately
             const client = this.uploadHttpManager.getClient(0);
             const headers = utils_1.getUploadHeaders('application/json', false);
-            const rawResponse = yield client.post(artifactUrl, data, headers);
-            const body = yield rawResponse.readBody();
-            if (utils_1.isSuccessStatusCode(rawResponse.message.statusCode) && body) {
-                return JSON.parse(body);
-            }
-            else if (utils_1.isForbiddenStatusCode(rawResponse.message.statusCode)) {
-                // if a 403 is returned when trying to create a file container, the customer has exceeded
-                // their storage quota so no new artifact containers can be created
-                throw new Error(`Artifact storage quota has been hit. Unable to upload any new artifacts`);
-            }
-            else {
-                utils_1.displayHttpDiagnostics(rawResponse);
-                throw new Error(`Unable to create a container for the artifact ${artifactName} at ${artifactUrl}`);
-            }
+            // Extra information to display when a particular HTTP code is returned
+            // If a 403 is returned when trying to create a file container, the customer has exceeded
+            // their storage quota so no new artifact containers can be created
+            const customErrorMessages = new Map([
+                [
+                    http_client_1.HttpCodes.Forbidden,
+                    'Artifact storage quota has been hit. Unable to upload any new artifacts'
+                ],
+                [
+                    http_client_1.HttpCodes.BadRequest,
+                    `The artifact name ${artifactName} is not valid. Request URL ${artifactUrl}`
+                ]
+            ]);
+            const response = yield requestUtils_1.retryHttpClientRequest('Create Artifact Container', () => __awaiter(this, void 0, void 0, function* () { return client.post(artifactUrl, data, headers); }), customErrorMessages);
+            const body = yield response.readBody();
+            return JSON.parse(body);
         });
     }
     /**
@@ -6263,12 +6349,12 @@ class UploadHttpClient {
                 this.uploadHttpManager.disposeAndReplaceClient(httpClientIndex);
                 if (retryAfterValue) {
                     core.info(`Backoff due to too many requests, retry #${retryCount}. Waiting for ${retryAfterValue} milliseconds before continuing the upload`);
-                    yield new Promise(resolve => setTimeout(resolve, retryAfterValue));
+                    yield utils_1.sleep(retryAfterValue);
                 }
                 else {
                     const backoffTime = utils_1.getExponentialRetryTimeInMilliseconds(retryCount);
                     core.info(`Exponential backoff for retry #${retryCount}. Waiting for ${backoffTime} milliseconds before continuing the upload at offset ${start}`);
-                    yield new Promise(resolve => setTimeout(resolve, backoffTime));
+                    yield utils_1.sleep(backoffTime);
                 }
                 core.info(`Finished backoff for retry #${retryCount}, continuing with upload`);
                 return;
@@ -6320,7 +6406,6 @@ class UploadHttpClient {
      */
     patchArtifactSize(size, artifactName) {
         return __awaiter(this, void 0, void 0, function* () {
-            const headers = utils_1.getUploadHeaders('application/json', false);
             const resourceUrl = new url_1.URL(utils_1.getArtifactUrl());
             resourceUrl.searchParams.append('artifactName', artifactName);
             const parameters = { Size: size };
@@ -6328,19 +6413,18 @@ class UploadHttpClient {
             core.debug(`URL is ${resourceUrl.toString()}`);
             // use the first client from the httpManager, `keep-alive` is not used so the connection will close immediately
             const client = this.uploadHttpManager.getClient(0);
-            const response = yield client.patch(resourceUrl.toString(), data, headers);
-            const body = yield response.readBody();
-            if (utils_1.isSuccessStatusCode(response.message.statusCode)) {
-                core.debug(`Artifact ${artifactName} has been successfully uploaded, total size in bytes: ${size}`);
-            }
-            else if (response.message.statusCode === 404) {
-                throw new Error(`An Artifact with the name ${artifactName} was not found`);
-            }
-            else {
-                utils_1.displayHttpDiagnostics(response);
-                core.info(body);
-                throw new Error(`Unable to finish uploading artifact ${artifactName} to ${resourceUrl}`);
-            }
+            const headers = utils_1.getUploadHeaders('application/json', false);
+            // Extra information to display when a particular HTTP code is returned
+            const customErrorMessages = new Map([
+                [
+                    http_client_1.HttpCodes.NotFound,
+                    `An Artifact with the name ${artifactName} was not found`
+                ]
+            ]);
+            // TODO retry for all possible response codes, the artifact upload is pretty much complete so it at all costs we should try to finish this
+            const response = yield requestUtils_1.retryHttpClientRequest('Finalize artifact upload', () => __awaiter(this, void 0, void 0, function* () { return client.patch(resourceUrl.toString(), data, headers); }), customErrorMessages);
+            yield response.readBody();
+            core.debug(`Artifact ${artifactName} has been successfully uploaded, total size in bytes: ${size}`);
         });
     }
 }
@@ -6806,6 +6890,7 @@ const status_reporter_1 = __webpack_require__(176);
 const perf_hooks_1 = __webpack_require__(630);
 const http_manager_1 = __webpack_require__(452);
 const config_variables_1 = __webpack_require__(401);
+const requestUtils_1 = __webpack_require__(489);
 class DownloadHttpClient {
     constructor() {
         this.downloadHttpManager = new http_manager_1.HttpManager(config_variables_1.getDownloadFileConcurrency(), '@actions/artifact-download');
@@ -6821,13 +6906,9 @@ class DownloadHttpClient {
             // use the first client from the httpManager, `keep-alive` is not used so the connection will close immediately
             const client = this.downloadHttpManager.getClient(0);
             const headers = utils_1.getDownloadHeaders('application/json');
-            const response = yield client.get(artifactUrl, headers);
+            const response = yield requestUtils_1.retryHttpClientRequest('List Artifacts', () => __awaiter(this, void 0, void 0, function* () { return client.get(artifactUrl, headers); }));
             const body = yield response.readBody();
-            if (utils_1.isSuccessStatusCode(response.message.statusCode) && body) {
-                return JSON.parse(body);
-            }
-            utils_1.displayHttpDiagnostics(response);
-            throw new Error(`Unable to list artifacts for the run. Resource Url ${artifactUrl}`);
+            return JSON.parse(body);
         });
     }
     /**
@@ -6843,13 +6924,9 @@ class DownloadHttpClient {
             // use the first client from the httpManager, `keep-alive` is not used so the connection will close immediately
             const client = this.downloadHttpManager.getClient(0);
             const headers = utils_1.getDownloadHeaders('application/json');
-            const response = yield client.get(resourceUrl.toString(), headers);
+            const response = yield requestUtils_1.retryHttpClientRequest('Get Container Items', () => __awaiter(this, void 0, void 0, function* () { return client.get(resourceUrl.toString(), headers); }));
             const body = yield response.readBody();
-            if (utils_1.isSuccessStatusCode(response.message.statusCode) && body) {
-                return JSON.parse(body);
-            }
-            utils_1.displayHttpDiagnostics(response);
-            throw new Error(`Unable to get ContainersItems from ${resourceUrl}`);
+            return JSON.parse(body);
         });
     }
     /**
@@ -6924,13 +7001,13 @@ class DownloadHttpClient {
                     if (retryAfterValue) {
                         // Back off by waiting the specified time denoted by the retry-after header
                         core.info(`Backoff due to too many requests, retry #${retryCount}. Waiting for ${retryAfterValue} milliseconds before continuing the download`);
-                        yield new Promise(resolve => setTimeout(resolve, retryAfterValue));
+                        yield utils_1.sleep(retryAfterValue);
                     }
                     else {
                         // Back off using an exponential value that depends on the retry count
                         const backoffTime = utils_1.getExponentialRetryTimeInMilliseconds(retryCount);
                         core.info(`Exponential backoff for retry #${retryCount}. Waiting for ${backoffTime} milliseconds before continuing the download`);
-                        yield new Promise(resolve => setTimeout(resolve, backoffTime));
+                        yield utils_1.sleep(backoffTime);
                     }
                     core.info(`Finished backoff for retry #${retryCount}, continuing with download`);
                 }
@@ -7612,6 +7689,12 @@ function getProperRetention(retentionInput, retentionSetting) {
     return retention;
 }
 exports.getProperRetention = getProperRetention;
+function sleep(milliseconds) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
+    });
+}
+exports.sleep = sleep;
 //# sourceMappingURL=utils.js.map
 
 /***/ }),
