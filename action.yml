@@ -1,13 +1,12 @@
-name: 'Download a Build Artifact'
-description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
-author: 'GitHub'
-inputs: 
-  name:
-    description: 'Artifact name'
-    required: false
-  path:
-    description: 'Destination path'
-    required: false
-runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: npm install and build webpack
+        run: |
+          npm install
+          npm run build
+      - uses: actions/upload-artifact@main
+        with:
+          name: webpack artifacts
+          path: public/
