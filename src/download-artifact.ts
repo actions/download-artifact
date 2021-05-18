@@ -13,7 +13,7 @@ async function run(): Promise<void> {
     const chosenPath = core.getInput(Inputs.Path, {required: false})
     const s3Bucket = core.getInput(Inputs.S3Bucket, {required: false})
 
-    let resolvedPath = "";
+    let resolvedPath = ''
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
     if (chosenPath.startsWith(`~`)) {
       path.resolve()
@@ -34,19 +34,19 @@ async function run(): Promise<void> {
           continue
         }
         core.info(`Grabbing ${fileObject.Key}`)
-        s3.getObject({Bucket: s3Bucket, Key: fileObject.Key}, function (
-          err,
-          fileContents
-        ) {
-          if (err) {
-            core.error(err)
-            throw err
+        s3.getObject(
+          {Bucket: s3Bucket, Key: fileObject.Key},
+          function (err, fileContents) {
+            if (err) {
+              core.error(err)
+              throw err
+            }
+            fs.writeFileSync(
+              path.resolve(resolvedPath, fileObject.Key as string),
+              fileContents.Body?.toString()
+            )
           }
-          fs.writeFileSync(
-            path.resolve(resolvedPath, fileObject.Key as string),
-            fileContents.Body?.toString()
-          )
-        })
+        )
       }
     })
     // output the directory that the artifact(s) was/were downloaded to
