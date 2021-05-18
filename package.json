@@ -28,7 +28,6 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^0.5.1",
     "@actions/core": "^1.2.6",
     "@actions/github": "^5.0.0",
     "aws-sdk": "^2.908.0"
