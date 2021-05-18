@@ -1,54 +1,54 @@
 import * as core from '@actions/core'
 import * as artifact from '@actions/artifact'
+import * as github from '@actions/github'
+import * as AWS from 'aws-sdk'
 import * as os from 'os'
-import {resolve} from 'path'
+import * as fs from 'fs'
+import path from 'path'
 import {Inputs, Outputs} from './constants'
 
 async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
-    const path = core.getInput(Inputs.Path, {required: false})
+    const chosenPath = core.getInput(Inputs.Path, {required: false})
+    const s3Bucket = core.getInput(Inputs.S3Bucket, {required: false})
 
-    let resolvedPath
+    let resolvedPath = "";
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
-    if (path.startsWith(`~`)) {
-      resolvedPath = resolve(path.replace('~', os.homedir()))
+    if (chosenPath.startsWith(`~`)) {
+      path.resolve()
+      resolvedPath = path.resolve(chosenPath.replace('~', os.homedir()))
     } else {
-      resolvedPath = resolve(path)
+      resolvedPath = path.resolve(chosenPath)
     }
     core.debug(`Resolved path is ${resolvedPath}`)
-
-    const artifactClient = artifact.create()
-    if (!name) {
-      // download all artifacts
-      core.info('No artifact name specified, downloading all artifacts')
-      core.info(
-        'Creating an extra directory for each artifact that is being downloaded'
-      )
-      const downloadResponse = await artifactClient.downloadAllArtifacts(
-        resolvedPath
-      )
-      core.info(`There were ${downloadResponse.length} artifacts downloaded`)
-      for (const artifact of downloadResponse) {
-        core.info(
-          `Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`
-        )
+    const s3 = new AWS.S3()
+    const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}`
+    s3.listObjects({Bucket: s3Bucket, Prefix: s3Prefix}, function (err, data) {
+      if (!data.Contents || err) {
+        core.error(err)
+        return
       }
-    } else {
-      // download a single artifact
-      core.info(`Starting download for ${name}`)
-      const downloadOptions = {
-        createArtifactFolder: false
+      for (const fileObject of data.Contents) {
+        if (!fileObject.Key) {
+          continue
+        }
+        core.info(`Grabbing ${fileObject.Key}`)
+        s3.getObject({Bucket: s3Bucket, Key: fileObject.Key}, function (
+          err,
+          fileContents
+        ) {
+          if (err) {
+            core.error(err)
+            throw err
+          }
+          fs.writeFileSync(
+            path.resolve(resolvedPath, fileObject.Key as string),
+            fileContents.Body?.toString()
+          )
+        })
       }
-      const downloadResponse = await artifactClient.downloadArtifact(
-        name,
-        resolvedPath,
-        downloadOptions
-      )
-      core.info(
-        `Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`
-      )
-    }
+    })
     // output the directory that the artifact(s) was/were downloaded to
     // if no path is provided, an empty string resolves to the current working directory
     core.setOutput(Outputs.DownloadPath, resolvedPath)

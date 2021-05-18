@@ -1,12 +1,15 @@
 name: 'Download a Build Artifact'
 description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
 author: 'GitHub'
-inputs: 
+inputs:
   name:
     description: 'Artifact name'
     required: false
   path:
     description: 'Destination path'
+    required: false
+  s3-bucket:
+    description: 'S3 bucket to pull from'
     required: false
 runs:
   using: 'node12'
