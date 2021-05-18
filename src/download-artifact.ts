@@ -33,7 +33,7 @@ async function run(): Promise<void> {
           continue
         }
         const localKey = fileObject.Key.replace(s3Prefix, '')
-        core.info(`Downloading ${localKey}`)
+        core.info(`Started download: ${localKey}`)
         core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
         s3.getObject({Bucket: s3Bucket, Key: fileObject.Key}, function (
           err,
@@ -44,10 +44,10 @@ async function run(): Promise<void> {
             throw err
           }
           fs.writeFileSync(
-            path.resolve(resolvedPath, localKey),
+            path.join(resolvedPath, localKey),
             fileContents.Body?.toString()
           )
-          core.info(`DONE: ${localKey}`)
+          core.info(`Done: ${localKey}`)
         })
       }
     })
