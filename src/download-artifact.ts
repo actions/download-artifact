@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import * as artifact from '@actions/artifact'
 import * as github from '@actions/github'
 import * as AWS from 'aws-sdk'
 import * as os from 'os'
@@ -33,20 +32,23 @@ async function run(): Promise<void> {
         if (!fileObject.Key) {
           continue
         }
-        core.info(`Grabbing ${fileObject.Key}`)
-        s3.getObject(
-          {Bucket: s3Bucket, Key: fileObject.Key},
-          function (err, fileContents) {
-            if (err) {
-              core.error(err)
-              throw err
-            }
-            fs.writeFileSync(
-              path.resolve(resolvedPath, fileObject.Key as string),
-              fileContents.Body?.toString()
-            )
+        const localKey = fileObject.Key.replace(s3Prefix, '')
+        core.info(`Downloading ${localKey}`)
+        core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
+        s3.getObject({Bucket: s3Bucket, Key: fileObject.Key}, function (
+          err,
+          fileContents
+        ) {
+          if (err) {
+            core.error(`Error downloading ${localKey}`)
+            throw err
           }
-        )
+          fs.writeFileSync(
+            path.resolve(resolvedPath, localKey),
+            fileContents.Body?.toString()
+          )
+          core.info(`DONE: ${localKey}`)
+        })
       }
     })
     // output the directory that the artifact(s) was/were downloaded to
