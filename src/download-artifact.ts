@@ -11,6 +11,7 @@ async function run(): Promise<void> {
     const name = core.getInput(Inputs.Name, {required: false})
     const chosenPath = core.getInput(Inputs.Path, {required: false})
     const s3Bucket = core.getInput(Inputs.S3Bucket, {required: false})
+    const region = core.getInput(Inputs.Region, {required: false})
 
     let resolvedPath = ''
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
@@ -21,7 +22,7 @@ async function run(): Promise<void> {
       resolvedPath = path.resolve(chosenPath)
     }
     core.debug(`Resolved path is ${resolvedPath}`)
-    const s3 = new AWS.S3()
+    const s3 = new AWS.S3({region: region})
     const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}`
     const s3Params = {
       Bucket: s3Bucket,
