@@ -23,32 +23,30 @@ async function run(): Promise<void> {
     core.debug(`Resolved path is ${resolvedPath}`)
     const s3 = new AWS.S3()
     const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}`
-    s3.listObjects({Bucket: s3Bucket, Prefix: s3Prefix}, function (err, data) {
-      if (!data.Contents || err) {
-        core.error(err)
-        return
+    const s3Params = {
+      Bucket: s3Bucket,
+      Prefix: s3Prefix
+    }
+    core.debug(JSON.stringify(s3Params))
+    s3.listObjects(s3Params, function (err, data) {
+      if (err) {
+        throw err
+      }
+      if (!data.Contents) {
+        throw new Error(`Could not find objects with ${s3Prefix}`)
       }
       for (const fileObject of data.Contents) {
         if (!fileObject.Key) {
           continue
         }
+        const getObjectParams = {Bucket: s3Bucket, Key: fileObject.Key}
         const localKey = fileObject.Key.replace(s3Prefix, '')
+        const writeStream = fs.createWriteStream(localKey)
         core.info(`Started download: ${localKey}`)
         core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
-        s3.getObject({Bucket: s3Bucket, Key: fileObject.Key}, function (
-          err,
-          fileContents
-        ) {
-          if (err) {
-            core.error(`Error downloading ${localKey}`)
-            throw err
-          }
-          fs.writeFileSync(
-            path.join(resolvedPath, localKey),
-            fileContents.Body?.toString()
-          )
-          core.info(`Done: ${localKey}`)
-        })
+        const readStream = s3.getObject(getObjectParams).createReadStream()
+        readStream.pipe(writeStream)
+        core.info(`Finished download for ${localKey}`)
       }
     })
     // output the directory that the artifact(s) was/were downloaded to
