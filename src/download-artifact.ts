@@ -41,12 +41,16 @@ async function run(): Promise<void> {
           continue
         }
         const getObjectParams = {Bucket: s3Bucket, Key: fileObject.Key}
-        const localKey = fileObject.Key.replace(s3Prefix, '')
+        const localKey = path.join(
+          resolvedPath,
+          fileObject.Key.replace(s3Prefix, '')
+        )
         const writeStream = fs.createWriteStream(localKey)
         core.info(`Started download: ${localKey}`)
         core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
         const readStream = s3.getObject(getObjectParams).createReadStream()
         readStream.pipe(writeStream)
+        writeStream.close()
         core.info(`Finished download for ${localKey}`)
       }
     })
