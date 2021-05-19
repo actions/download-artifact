@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import path from 'path'
 import {Inputs, Outputs} from './constants'
 
-async function doDownload(
+function doDownload(
   s3: AWS.S3,
   s3Bucket: string,
   fileKey: string,
@@ -24,7 +24,10 @@ async function doDownload(
     core.debug(`S3 download uri: s3://${s3Bucket}/${fileKey}`)
     const readStream = s3.getObject(getObjectParams).createReadStream()
     readStream.pipe(writeStream)
-    readStream.on('close', resolve)
+    readStream.on('close', () => {
+      core.info(`Finished download: ${localKey}`)
+      resolve
+    })
     readStream.on('error', reject)
   })
 }
@@ -52,24 +55,20 @@ async function run(): Promise<void> {
       Prefix: s3Prefix
     }
     core.debug(JSON.stringify(s3Params))
-    s3.listObjects(s3Params, async function (err, data) {
-      if (err) {
-        throw err
+    const objects = await s3.listObjects(s3Params).promise()
+    if (!objects.Contents) {
+      throw new Error(`Could not find objects with ${s3Prefix}`)
+    }
+    for (const fileObject of objects.Contents) {
+      if (!fileObject.Key) {
+        continue
       }
-      if (!data.Contents) {
-        throw new Error(`Could not find objects with ${s3Prefix}`)
-      }
-      for (const fileObject of data.Contents) {
-        if (!fileObject.Key) {
-          continue
-        }
-        const localKey = path.join(
-          resolvedPath,
-          fileObject.Key.replace(s3Prefix, '')
-        )
-        await doDownload(s3, s3Bucket, fileObject.Key, localKey)
-      }
-    })
+      const localKey = path.join(
+        resolvedPath,
+        fileObject.Key.replace(s3Prefix, '')
+      )
+      await doDownload(s3, s3Bucket, fileObject.Key, localKey)
+    }
     // output the directory that the artifact(s) was/were downloaded to
     // if no path is provided, an empty string resolves to the current working directory
     core.setOutput(Outputs.DownloadPath, resolvedPath)
