@@ -10,22 +10,16 @@ function doDownload(
   s3: AWS.S3,
   s3Bucket: string,
   fileKey: string,
-  localKey: string
+  writeStream: fs.WriteStream
 ): Promise<void> {
   return new Promise(function (resolve, reject) {
-    const localKeyDir = path.dirname(localKey)
-    if (!fs.existsSync(localKeyDir)) {
-      core.debug(`Creating directory (${localKeyDir}) since it did not exist`)
-      fs.mkdirSync(localKeyDir, {recursive: true})
-    }
     const getObjectParams = {Bucket: s3Bucket, Key: fileKey}
-    const writeStream = fs.createWriteStream(localKey)
-    core.info(`Started download: ${localKey}`)
     core.debug(`S3 download uri: s3://${s3Bucket}/${fileKey}`)
-    const readStream = s3.getObject(getObjectParams).createReadStream()
-    readStream.pipe(writeStream)
-    readStream.on('close', resolve)
-    readStream.on('error', reject)
+    s3.getObject(getObjectParams)
+      .createReadStream()
+      .on('end', () => resolve())
+      .on('error', error => reject(error))
+      .pipe(writeStream)
   })
 }
 
@@ -56,6 +50,7 @@ async function run(): Promise<void> {
     if (!objects.Contents) {
       throw new Error(`Could not find objects with ${s3Prefix}`)
     }
+    core.info(`Found ${objects.Contents.length} objects with prefix ${s3Prefix}`)
     for (const fileObject of objects.Contents) {
       if (!fileObject.Key) {
         continue
@@ -64,9 +59,19 @@ async function run(): Promise<void> {
         resolvedPath,
         fileObject.Key.replace(s3Prefix, '')
       )
-      await doDownload(s3, s3Bucket, fileObject.Key, localKey).then(() => {
-        core.info(`Finished download: ${localKey}`)
-      })
+      const localKeyDir = path.dirname(localKey)
+      if (!fs.existsSync(localKeyDir)) {
+        core.debug(`Creating directory (${localKeyDir}) since it did not exist`)
+        fs.mkdirSync(localKeyDir, {recursive: true})
+      }
+      core.info(`Starting download (): ${localKey}`)
+      await doDownload(
+        s3,
+        s3Bucket,
+        fileObject.Key,
+        fs.createWriteStream(localKey)
+      )
+      core.info(`Finished download: ${localKey}`)
     }
     // output the directory that the artifact(s) was/were downloaded to
     // if no path is provided, an empty string resolves to the current working directory
