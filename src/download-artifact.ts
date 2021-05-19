@@ -24,10 +24,7 @@ function doDownload(
     core.debug(`S3 download uri: s3://${s3Bucket}/${fileKey}`)
     const readStream = s3.getObject(getObjectParams).createReadStream()
     readStream.pipe(writeStream)
-    readStream.on('close', () => {
-      core.info(`Finished download: ${localKey}`)
-      resolve
-    })
+    readStream.on('close', resolve)
     readStream.on('error', reject)
   })
 }
@@ -67,7 +64,9 @@ async function run(): Promise<void> {
         resolvedPath,
         fileObject.Key.replace(s3Prefix, '')
       )
-      await doDownload(s3, s3Bucket, fileObject.Key, localKey)
+      await doDownload(s3, s3Bucket, fileObject.Key, localKey).then(() => {
+        core.info(`Finished download: ${localKey}`)
+      })
     }
     // output the directory that the artifact(s) was/were downloaded to
     // if no path is provided, an empty string resolves to the current working directory
