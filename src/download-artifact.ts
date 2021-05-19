@@ -22,6 +22,11 @@ async function run(): Promise<void> {
       resolvedPath = path.resolve(chosenPath)
     }
     core.debug(`Resolved path is ${resolvedPath}`)
+    // Create directory if it doesn't already exist
+    if (!fs.existsSync(resolvedPath)) {
+      core.debug(`Creating directory (${resolvedPath}) since it did not exist`)
+      fs.mkdirSync(resolvedPath, {recursive: true})
+    }
     const s3 = new AWS.S3({region: region})
     const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}/`
     const s3Params = {
