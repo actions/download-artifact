@@ -22,11 +22,6 @@ async function run(): Promise<void> {
       resolvedPath = path.resolve(chosenPath)
     }
     core.debug(`Resolved path is ${resolvedPath}`)
-    // Create directory if it doesn't already exist
-    if (!fs.existsSync(resolvedPath)) {
-      core.debug(`Creating directory (${resolvedPath}) since it did not exist`)
-      fs.mkdirSync(resolvedPath, {recursive: true})
-    }
     const s3 = new AWS.S3({region: region})
     const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}/`
     const s3Params = {
@@ -50,6 +45,13 @@ async function run(): Promise<void> {
           resolvedPath,
           fileObject.Key.replace(s3Prefix, '')
         )
+        const localKeyDir = path.dirname(localKey)
+        if (!fs.existsSync(localKeyDir)) {
+          core.debug(
+            `Creating directory (${localKeyDir}) since it did not exist`
+          )
+          fs.mkdirSync(localKeyDir, {recursive: true})
+        }
         const writeStream = fs.createWriteStream(localKey)
         core.info(`Started download: ${localKey}`)
         core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
