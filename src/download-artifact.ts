@@ -6,6 +6,29 @@ import * as fs from 'fs'
 import path from 'path'
 import {Inputs, Outputs} from './constants'
 
+async function doDownload(
+  s3: AWS.S3,
+  s3Bucket: string,
+  fileKey: string,
+  localKey: string
+): Promise<void> {
+  return new Promise(function (resolve, reject) {
+    const localKeyDir = path.dirname(localKey)
+    if (!fs.existsSync(localKeyDir)) {
+      core.debug(`Creating directory (${localKeyDir}) since it did not exist`)
+      fs.mkdirSync(localKeyDir, {recursive: true})
+    }
+    const getObjectParams = {Bucket: s3Bucket, Key: fileKey}
+    const writeStream = fs.createWriteStream(localKey)
+    core.info(`Started download: ${localKey}`)
+    core.debug(`S3 download uri: s3://${s3Bucket}/${fileKey}`)
+    const readStream = s3.getObject(getObjectParams).createReadStream()
+    readStream.pipe(writeStream)
+    readStream.on('close', resolve)
+    readStream.on('error', reject)
+  })
+}
+
 async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
@@ -29,7 +52,7 @@ async function run(): Promise<void> {
       Prefix: s3Prefix
     }
     core.debug(JSON.stringify(s3Params))
-    s3.listObjects(s3Params, function (err, data) {
+    s3.listObjects(s3Params, async function (err, data) {
       if (err) {
         throw err
       }
@@ -40,25 +63,11 @@ async function run(): Promise<void> {
         if (!fileObject.Key) {
           continue
         }
-        const getObjectParams = {Bucket: s3Bucket, Key: fileObject.Key}
         const localKey = path.join(
           resolvedPath,
           fileObject.Key.replace(s3Prefix, '')
         )
-        const localKeyDir = path.dirname(localKey)
-        if (!fs.existsSync(localKeyDir)) {
-          core.debug(
-            `Creating directory (${localKeyDir}) since it did not exist`
-          )
-          fs.mkdirSync(localKeyDir, {recursive: true})
-        }
-        const writeStream = fs.createWriteStream(localKey)
-        core.info(`Started download: ${localKey}`)
-        core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
-        const readStream = s3.getObject(getObjectParams).createReadStream()
-        readStream.pipe(writeStream)
-        readStream.unpipe()
-        core.info(`Finished download for ${localKey}`)
+        await doDownload(s3, s3Bucket, fileObject.Key, localKey)
       }
     })
     // output the directory that the artifact(s) was/were downloaded to
