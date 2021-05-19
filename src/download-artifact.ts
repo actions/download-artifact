@@ -50,7 +50,10 @@ async function run(): Promise<void> {
     if (!objects.Contents) {
       throw new Error(`Could not find objects with ${s3Prefix}`)
     }
-    core.info(`Found ${objects.Contents.length} objects with prefix ${s3Prefix}`)
+    core.info(
+      `Found ${objects.Contents.length} objects with prefix ${s3Prefix}`
+    )
+    let num = 1
     for (const fileObject of objects.Contents) {
       if (!fileObject.Key) {
         continue
@@ -64,14 +67,19 @@ async function run(): Promise<void> {
         core.debug(`Creating directory (${localKeyDir}) since it did not exist`)
         fs.mkdirSync(localKeyDir, {recursive: true})
       }
-      core.info(`Starting download (): ${localKey}`)
+      core.info(
+        `Starting download (${num}/${objects.Contents.length}): ${localKey}`
+      )
       await doDownload(
         s3,
         s3Bucket,
         fileObject.Key,
         fs.createWriteStream(localKey)
       )
-      core.info(`Finished download: ${localKey}`)
+      core.info(
+        `Finished download (${num}/${objects.Contents.length}): ${localKey}`
+      )
+      num++
     }
     // output the directory that the artifact(s) was/were downloaded to
     // if no path is provided, an empty string resolves to the current working directory
