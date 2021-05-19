@@ -55,7 +55,7 @@ async function run(): Promise<void> {
         core.debug(`S3 download uri: s3://${s3Bucket}/${fileObject.Key}`)
         const readStream = s3.getObject(getObjectParams).createReadStream()
         readStream.pipe(writeStream)
-        writeStream.close()
+        readStream.unpipe()
         core.info(`Finished download for ${localKey}`)
       }
     })
