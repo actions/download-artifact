@@ -63,7 +63,7 @@ When using `download-artifact@v1`, a directory denoted by the name of the artifa
           ... contents of my-artifact
 ```
 
-With `v2`, there is no longer an extra directory that is created if the `path` input is not provided. All the contents are downloaded to the current working directory.
+With `v2`, when an artifact is specified by the `name` input, there is no longer an extra directory that is created if the `path` input is not provided. All the contents are downloaded to the current working directory.
 ```
    current/working/directory/
       ... contents of my-artifact
