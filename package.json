@@ -29,16 +29,16 @@
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
     "@actions/artifact": "^0.5.2",
-    "@actions/core": "^1.2.6"
+    "@actions/core": "^1.5.0"
   },
   "devDependencies": {
-    "@types/node": "^12.12.6",
-    "@typescript-eslint/parser": "^2.30.0",
-    "@zeit/ncc": "^0.22.1",
-    "concurrently": "^5.2.0",
-    "eslint": "^7.4.0",
-    "eslint-plugin-github": "^4.1.1",
-    "prettier": "^2.0.5",
-    "typescript": "^3.8.3"
+    "@types/node": "^16.7.1",
+    "@typescript-eslint/parser": "^4.29.2",
+    "@vercel/ncc": "^0.29.2",
+    "concurrently": "^6.2.1",
+    "eslint": "^7.32.0",
+    "eslint-plugin-github": "^4.2.0",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
   }
 }

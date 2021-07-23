@@ -24,8 +24,9 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set Node.js 12.x
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2
       with:
+        cache: npm
         node-version: 12.x
 
     - name: npm install
@@ -50,13 +51,13 @@ jobs:
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
     
     - name: Upload artifact A
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: 'Artifact-A'
         path: path/to/artifact-A
 
     - name: Upload artifact B
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: 'Artifact-B'
         path: path/to/artifact-B
