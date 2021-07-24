@@ -37,7 +37,7 @@
     "@zeit/ncc": "^0.22.3",
     "concurrently": "^6.2.0",
     "eslint": "^7.31.0",
-    "eslint-plugin-github": "^4.1.1",
+    "eslint-plugin-github": "^4.1.5",
     "prettier": "^2.3.2",
     "typescript": "^4.3.5"
   }
