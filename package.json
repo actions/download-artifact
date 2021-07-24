@@ -29,7 +29,7 @@
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
     "@actions/artifact": "^0.5.2",
-    "@actions/core": "^1.2.6"
+    "@actions/core": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^16.4.1",
