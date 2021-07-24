@@ -34,7 +34,7 @@
   "devDependencies": {
     "@types/node": "^16.4.1",
     "@typescript-eslint/parser": "^4.28.4",
-    "@zeit/ncc": "^0.22.1",
+    "@zeit/ncc": "^0.22.3",
     "concurrently": "^5.2.0",
     "eslint": "^7.4.0",
     "eslint-plugin-github": "^4.1.1",
