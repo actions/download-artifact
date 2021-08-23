@@ -8,10 +8,4 @@ allowed:
   - cc0-1.0
   - isc
   - mit
-  - unlicense
-
-reviewed:
-  npm:
-  - 'fs.realpath' 
-  - '@actions/http-client'
-  - 'glob'
+  - unlicense 

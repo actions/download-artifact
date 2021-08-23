@@ -1,4 +1,4 @@
-name: Licensed
+name: Licensed status
 
 on:
   push:
@@ -11,12 +11,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Check licenses status
+    name: Check licenses
     steps:
       - uses: actions/checkout@v2
-      - uses: jonabc/setup-licensed@v1
+        with:
+          fetch-depth: 0
+      - run: npm ci
+      - name: Install licensed
+        uses: jonabc/setup-licensed@v1
         with:
           version: '3.x'
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - run: npm install
       - run: licensed status

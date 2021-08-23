@@ -109,5 +109,3 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
-
-      

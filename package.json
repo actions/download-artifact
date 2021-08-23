@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "^16.7.1",
-    "@typescript-eslint/parser": "^4.29.2",
+    "@typescript-eslint/parser": "^4.29.3",
     "@vercel/ncc": "^0.29.2",
     "concurrently": "^6.2.1",
     "eslint": "^7.32.0",
