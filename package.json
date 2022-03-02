@@ -1,6 +1,6 @@
 {
   "name": "download-artifact",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
   "main": "dist/index.js",
   "scripts": {
@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^0.6.0",
+    "@actions/artifact": "^1.0.0",
     "@actions/core": "^1.2.6"
   },
   "devDependencies": {

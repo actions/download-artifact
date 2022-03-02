@@ -1,4 +1,4 @@
-# Download-Artifact v2
+# Download-Artifact v3
 
 This downloads artifacts from your build
 
@@ -10,7 +10,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
 - Output parameter for the download path
 - Port entire action to typescript from a runner plugin so it is easier to collaborate and accept contributions
 
-Refer [here](https://github.com/actions/download-artifact/tree/v1) for the previous version
+Refer [here](https://github.com/actions/download-artifact/tree/v2) for the previous version
 
 # Usage
 
@@ -23,7 +23,7 @@ Basic (download to the current working directory):
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2
+- uses: actions/download-artifact@v3
   with:
     name: my-artifact
     
@@ -36,7 +36,7 @@ Download to a specific directory:
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2
+- uses: actions/download-artifact@v3
   with:
     name: my-artifact
     path: path/to/artifact
@@ -48,13 +48,13 @@ steps:
 
 Basic tilde expansion is supported for the `path` input:
 ```yaml
-  - uses: actions/download-artifact@v2
+  - uses: actions/download-artifact@v3
     with:
       name: my-artifact
       path: ~/download/path
 ```
 
-## Compatibility between `v1` and `v2`
+## Compatibility between `v1` and `v2`/`v3`
 
 When using `download-artifact@v1`, a directory denoted by the name of the artifact would be created if the `path` input was not provided. All of the contents would be downloaded to this directory.
 ```
@@ -63,13 +63,13 @@ When using `download-artifact@v1`, a directory denoted by the name of the artifa
           ... contents of my-artifact
 ```
 
-With `v2`, when an artifact is specified by the `name` input, there is no longer an extra directory that is created if the `path` input is not provided. All the contents are downloaded to the current working directory.
+With `v2` and `v3`, when an artifact is specified by the `name` input, there is no longer an extra directory that is created if the `path` input is not provided. All the contents are downloaded to the current working directory.
 ```
    current/working/directory/
       ... contents of my-artifact
 ```
 
-To maintain the same behavior for `v2`, you can set the `path` to the name of the artifact so an extra directory gets created.
+To maintain the same behavior for `v2` and `v3`, you can set the `path` to the name of the artifact so an extra directory gets created.
 ```
 - uses: actions/download-artifact@v2
   with:
@@ -95,7 +95,7 @@ Download all artifacts to a specific directory
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2
+- uses: actions/download-artifact@v3
   with:
     path: path/to/artifacts
     
@@ -109,7 +109,7 @@ Download all artifacts to the current working directory
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2
+- uses: actions/download-artifact@v3
 
 - name: Display structure of downloaded files
   run: ls -R
@@ -123,7 +123,7 @@ The `download-path` step output contains information regarding where the artifac
 steps:
 - uses: actions/checkout@v2
 
-- uses: actions/download-artifact@v2
+- uses: actions/download-artifact@v3
   id: download
   with:
     name: 'my-artifact'
