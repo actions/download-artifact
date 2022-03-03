@@ -8,6 +8,27 @@ async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
+    const waitTimeoutStr = core.getInput(Inputs.WaitTimeout, {required: false})
+
+    let runDownload: <T extends unknown>(action: () => T) => T
+    // no retry allowed
+    if (waitTimeoutStr == '') {
+      runDownload = <T extends unknown>(action: () => T) => action()
+    } else {
+      const waitTimeoutSeconds = parseInt(waitTimeoutStr)
+      runDownload = <T extends unknown>(action: () => T) => {
+        const waitUntil = new Date().getSeconds() + waitTimeoutSeconds
+        let lastError
+        do {
+          try {
+            return action()
+          } catch (e) {
+            lastError = e
+          }
+        } while (new Date().getSeconds() < waitUntil)
+        throw Error('Timeout reached. Latest error: ' + lastError)
+      }
+    }
 
     let resolvedPath
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
@@ -25,8 +46,8 @@ async function run(): Promise<void> {
       core.info(
         'Creating an extra directory for each artifact that is being downloaded'
       )
-      const downloadResponse = await artifactClient.downloadAllArtifacts(
-        resolvedPath
+      const downloadResponse = await runDownload(
+        async () => await artifactClient.downloadAllArtifacts(resolvedPath)
       )
       core.info(`There were ${downloadResponse.length} artifacts downloaded`)
       for (const artifact of downloadResponse) {
@@ -40,10 +61,13 @@ async function run(): Promise<void> {
       const downloadOptions = {
         createArtifactFolder: false
       }
-      const downloadResponse = await artifactClient.downloadArtifact(
-        name,
-        resolvedPath,
-        downloadOptions
+      const downloadResponse = await runDownload(
+        async () =>
+          await artifactClient.downloadArtifact(
+            name,
+            resolvedPath,
+            downloadOptions
+          )
       )
       core.info(
         `Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`

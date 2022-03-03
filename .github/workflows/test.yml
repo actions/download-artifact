@@ -156,12 +156,14 @@ jobs:
       - run: npm install
 
       - run: npm run build
+
       # Test downloading a single artifact
       - name: Download artifact A
         uses: ./
         with:
           name: 'Artifact-wait-${{ matrix.runs-on }}'
           path: some/new/path
+          waitTimeout: 600
 
       # Test downloading an artifact using tilde expansion
       - name: Download artifact A
@@ -169,6 +171,7 @@ jobs:
         with:
           name: 'Artifact-wait-${{ matrix.runs-on }}'
           path: ~/some/path/with/a/tilde
+          # no need for a timeout here
 
       - name: Verify successful download
         run: |
@@ -184,21 +187,43 @@ jobs:
           }
         shell: pwsh
 
-      # Test downloading both artifacts at once
+  # Test downloading all artifacts at once
+  test-wait-consumer-all:
+    name: 'Test: wait (consumer - all)'
+
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set Node.js 12.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - run: npm install
+
+      - run: npm run build
+
       - name: Download all Artifacts
         uses: ./
         with:
           path: some/other/path
+          waitTimeout: 600
 
       - name: Verify successful download
         run: |
           $fileA = "some/other/path/Artifact-A/file-A.txt"
-          $fileB = "some/other/path/Artifact-B/file-B.txt"
-          if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+          if(!(Test-Path -path $fileA))
           {
               Write-Error "Expected files do not exist"
           }
-          if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+          if(!(Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet"))
           {
               Write-Error "File contents of downloaded artifacts are incorrect"
           }

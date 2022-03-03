@@ -1,12 +1,15 @@
 name: 'Download a Build Artifact'
 description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
 author: 'GitHub'
-inputs: 
+inputs:
   name:
     description: 'Artifact name'
     required: false
   path:
     description: 'Destination path'
+    required: false
+  waitTimeout:
+    description: 'Wait for the artifact to become available (timeout in seconds)'
     required: false
 runs:
   using: 'node16'
