@@ -7014,23 +7014,25 @@ function run() {
             let runDownload;
             // no retry allowed
             if (waitTimeoutStr == '') {
-                runDownload = (action) => action();
+                runDownload = (action) => __awaiter(this, void 0, void 0, function* () { return action(); });
             }
             else {
                 const waitTimeoutSeconds = parseInt(waitTimeoutStr);
-                runDownload = (action) => {
+                runDownload = (action) => __awaiter(this, void 0, void 0, function* () {
                     const waitUntil = new Date().getSeconds() + waitTimeoutSeconds;
                     let lastError;
                     do {
                         try {
-                            return action();
+                            return yield action();
                         }
                         catch (e) {
                             lastError = e;
+                            core.info('Waiting for the artifact to become available...');
+                            yield new Promise(f => setTimeout(f, 10000));
                         }
                     } while (new Date().getSeconds() < waitUntil);
                     throw Error('Timeout reached. Latest error: ' + lastError);
-                };
+                });
             }
             let resolvedPath;
             // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
@@ -7046,7 +7048,7 @@ function run() {
                 // download all artifacts
                 core.info('No artifact name specified, downloading all artifacts');
                 core.info('Creating an extra directory for each artifact that is being downloaded');
-                const downloadResponse = yield runDownload(() => __awaiter(this, void 0, void 0, function* () { return yield artifactClient.downloadAllArtifacts(resolvedPath); }));
+                const downloadResponse = yield runDownload(() => artifactClient.downloadAllArtifacts(resolvedPath));
                 core.info(`There were ${downloadResponse.length} artifacts downloaded`);
                 for (const artifact of downloadResponse) {
                     core.info(`Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`);
@@ -7058,9 +7060,7 @@ function run() {
                 const downloadOptions = {
                     createArtifactFolder: false
                 };
-                const downloadResponse = yield runDownload(() => __awaiter(this, void 0, void 0, function* () {
-                    return yield artifactClient.downloadArtifact(name, resolvedPath, downloadOptions);
-                }));
+                const downloadResponse = yield runDownload(() => artifactClient.downloadArtifact(name, resolvedPath, downloadOptions));
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
             // output the directory that the artifact(s) was/were downloaded to

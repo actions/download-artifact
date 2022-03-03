@@ -10,20 +10,22 @@ async function run(): Promise<void> {
     const path = core.getInput(Inputs.Path, {required: false})
     const waitTimeoutStr = core.getInput(Inputs.WaitTimeout, {required: false})
 
-    let runDownload: <T extends unknown>(action: () => T) => T
+    let runDownload: <T extends unknown>(action: () => T) => Promise<T>
     // no retry allowed
     if (waitTimeoutStr == '') {
-      runDownload = <T extends unknown>(action: () => T) => action()
+      runDownload = async <T extends unknown>(action: () => T) => action()
     } else {
       const waitTimeoutSeconds = parseInt(waitTimeoutStr)
-      runDownload = <T extends unknown>(action: () => T) => {
+      runDownload = async <T extends unknown>(action: () => T) => {
         const waitUntil = new Date().getSeconds() + waitTimeoutSeconds
         let lastError
         do {
           try {
-            return action()
+            return await action()
           } catch (e) {
             lastError = e
+            core.info('Waiting for the artifact to become available...')
+            await new Promise(f => setTimeout(f, 10000))
           }
         } while (new Date().getSeconds() < waitUntil)
         throw Error('Timeout reached. Latest error: ' + lastError)
@@ -46,8 +48,8 @@ async function run(): Promise<void> {
       core.info(
         'Creating an extra directory for each artifact that is being downloaded'
       )
-      const downloadResponse = await runDownload(
-        async () => await artifactClient.downloadAllArtifacts(resolvedPath)
+      const downloadResponse = await runDownload(() =>
+        artifactClient.downloadAllArtifacts(resolvedPath)
       )
       core.info(`There were ${downloadResponse.length} artifacts downloaded`)
       for (const artifact of downloadResponse) {
@@ -61,13 +63,8 @@ async function run(): Promise<void> {
       const downloadOptions = {
         createArtifactFolder: false
       }
-      const downloadResponse = await runDownload(
-        async () =>
-          await artifactClient.downloadArtifact(
-            name,
-            resolvedPath,
-            downloadOptions
-          )
+      const downloadResponse = await runDownload(() =>
+        artifactClient.downloadArtifact(name, resolvedPath, downloadOptions)
       )
       core.info(
         `Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`

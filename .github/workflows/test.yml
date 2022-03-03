@@ -223,7 +223,7 @@ jobs:
           {
               Write-Error "Expected files do not exist"
           }
-          if(!(Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet"))
+          if(!(Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet")
           {
               Write-Error "File contents of downloaded artifacts are incorrect"
           }
