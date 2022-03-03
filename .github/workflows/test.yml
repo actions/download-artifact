@@ -38,7 +38,7 @@ jobs:
       run: npm run lint
 
     - name: Format
-      run: npm run format-check 
+      run: npm run format-check
 
     # Test end-to-end by uploading two artifacts and then downloading them
     # Once upload-artifact v2 is out of preview, switch over
@@ -48,7 +48,7 @@ jobs:
         mkdir -p path/to/artifact-B
         echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
-    
+
     - name: Upload artifact A
       uses: actions/upload-artifact@v1
       with:
@@ -109,4 +109,98 @@ jobs:
         }
       shell: pwsh
 
-      
+  # Test "wait-until-available" functionality by running two jobs, one requiring artifacts of another
+  test-wait-producer:
+    name: 'Test: wait (producer)'
+
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      # TODO find a better way to ensure the "consumer" job started before the artifact is produced.
+      # Maybe run the download in the background process in the same job and checking it's result after upload-artifact.
+      - run: sleep 300
+
+      # Test "wait until available"end-to-end by uploading two artifacts and then downloading them
+      # Once upload-artifact v2 is out of preview, switch over
+      - name: Create artifacts
+        run: echo "Lorem ipsum dolor sit amet" > file-A.txt
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: 'Artifact-wait-${{ matrix.runs-on }}'
+          path: file-A.txt
+
+  test-wait-consumer:
+    name: 'Test: wait (consumer)'
+
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set Node.js 12.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - run: npm install
+
+      - run: npm run build
+      # Test downloading a single artifact
+      - name: Download artifact A
+        uses: ./
+        with:
+          name: 'Artifact-wait-${{ matrix.runs-on }}'
+          path: some/new/path
+
+      # Test downloading an artifact using tilde expansion
+      - name: Download artifact A
+        uses: ./
+        with:
+          name: 'Artifact-wait-${{ matrix.runs-on }}'
+          path: ~/some/path/with/a/tilde
+
+      - name: Verify successful download
+        run: |
+          $file1 = "some/new/path/file-A.txt"
+          $file2 = "~/some/path/with/a/tilde/file-A.txt"
+          if(!(Test-Path -path $file1) -or !(Test-Path -path $file2))
+          {
+              Write-Error "Expected files do not exist"
+          }
+          if(!((Get-Content $file1) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $file2) -ceq "Lorem ipsum dolor sit amet"))
+          {
+              Write-Error "File contents of downloaded artifacts are incorrect"
+          }
+        shell: pwsh
+
+      # Test downloading both artifacts at once
+      - name: Download all Artifacts
+        uses: ./
+        with:
+          path: some/other/path
+
+      - name: Verify successful download
+        run: |
+          $fileA = "some/other/path/Artifact-A/file-A.txt"
+          $fileB = "some/other/path/Artifact-B/file-B.txt"
+          if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+          {
+              Write-Error "Expected files do not exist"
+          }
+          if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+          {
+              Write-Error "File contents of downloaded artifacts are incorrect"
+          }
+        shell: pwsh
+
