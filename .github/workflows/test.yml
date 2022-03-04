@@ -163,7 +163,7 @@ jobs:
         with:
           name: 'Artifact-wait-${{ matrix.runs-on }}'
           path: some/new/path
-          waitTimeout: 600
+          wait-timeout: 600
 
       # Test downloading an artifact using tilde expansion
       - name: Download artifact A
@@ -214,7 +214,7 @@ jobs:
         uses: ./
         with:
           path: some/other/path
-          waitTimeout: 600
+          wait-timeout: 600
 
       - name: Verify successful download
         run: |

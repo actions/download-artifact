@@ -6954,7 +6954,7 @@ var Inputs;
 (function (Inputs) {
     Inputs["Name"] = "name";
     Inputs["Path"] = "path";
-    Inputs["WaitTimeout"] = "waitTimeout";
+    Inputs["WaitTimeout"] = "wait-timeout";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {

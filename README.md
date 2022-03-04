@@ -137,7 +137,7 @@ steps:
 
 # Waiting for the artifact to be available
 
-You can specify `waitTimeout` (seconds) to instruct the download/artifact to retry until the artifact is available.
+You can specify `wait-timeout` (seconds) to instruct the download-artifact action to retry until the artifact is available.
 This is useful if you want to launch the job before its dependency job has finished, e.g. if the dependant requires some time-consuming steps.
 You can do this by removing the `needs` dependency and relying on the retry logic of download-artifact to fetch the artifact after it's uploaded.
 
@@ -169,10 +169,8 @@ jobs:
         name: artifact-name
         path: output-path
         # wait for 300 seconds
-        waitTimeout: 300
+        wait-timeout: 300
 ```
-
-> Note: The `id` defined in the `download/artifact` step must match the `id` defined in the `echo` step (i.e `steps.[ID].outputs.download-path`)
 
 # Limitations
 

@@ -8,7 +8,7 @@ inputs:
   path:
     description: 'Destination path'
     required: false
-  waitTimeout:
+  wait-timeout:
     description: 'Wait for the artifact to become available (timeout in seconds)'
     required: false
 runs:

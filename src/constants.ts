@@ -1,7 +1,7 @@
 export enum Inputs {
   Name = 'name',
   Path = 'path',
-  WaitTimeout = 'waitTimeout'
+  WaitTimeout = 'wait-timeout'
 }
 export enum Outputs {
   DownloadPath = 'download-path'
