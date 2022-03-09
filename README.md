@@ -1,6 +1,8 @@
 # Download-Artifact v3
 
-This downloads artifacts from your build
+[![Test](https://github.com/actions/download-artifact/actions/workflows/test.yml/badge.svg)](https://github.com/actions/download-artifact/actions/workflows/test.yml)
+
+This downloads artifacts from your build.
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
