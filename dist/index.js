@@ -7299,10 +7299,10 @@ class DownloadHttpClient {
      * @param destinationStream the stream where the file should be written to
      * @param isGzip a boolean denoting if the content is compressed using gzip and if we need to decode it
      */
-    pipeResponseToFile(response, destinationStream, isGzip) {
+    pipeResponseToFile(response, destinationStream, isGzip, forceGzip) {
         return __awaiter(this, void 0, void 0, function* () {
             yield new Promise((resolve, reject) => {
-                if (isGzip) {
+                if (isGzip && !forceGzip) {
                     const gunzip = zlib.createGunzip();
                     response.message
                         .on('error', error => {
