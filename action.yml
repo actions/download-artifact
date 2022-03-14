@@ -8,7 +8,7 @@ inputs:
   path:
     description: 'Destination path'
     required: false
-  dontextract:
+  extract:
     description: 'Should the artifact be extracted after downloaded. Default behavior is True'
     required: false
     default: True
