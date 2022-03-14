@@ -1,7 +1,7 @@
 export enum Inputs {
   Name = 'name',
   Path = 'path',
-  Dontextract = 'dontextract'
+  Extract = 'extract'
 }
 export enum Outputs {
   DownloadPath = 'download-path'
