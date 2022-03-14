@@ -1,7 +1,7 @@
 export enum Inputs {
   Name = 'name',
   Path = 'path'
-  stayGzipped = 'staygzipped'
+  Dontextract = 'dontextract'
 }
 export enum Outputs {
   DownloadPath = 'download-path'
