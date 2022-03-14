@@ -8,7 +8,14 @@ async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
-
+    const dontextract = core.getInput(Inputs.Dontextract, {required: false})
+    let stayGzipped
+    if(dontextract == "True") {
+      stayGzipped = True
+    } else {
+      stayGzipped = False
+    }
+     
     let resolvedPath
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
     if (path.startsWith(`~`)) {
@@ -43,7 +50,8 @@ async function run(): Promise<void> {
       const downloadResponse = await artifactClient.downloadArtifact(
         name,
         resolvedPath,
-        downloadOptions
+        downloadOptions,
+        stayGzipped
       )
       core.info(
         `Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`
