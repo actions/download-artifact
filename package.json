@@ -9,7 +9,8 @@
     "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:build\"",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
-    "lint": "eslint **/*.ts"
+    "lint": "eslint **/*.ts",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -39,6 +40,7 @@
     "eslint": "^7.4.0",
     "eslint-plugin-github": "^4.1.1",
     "prettier": "^2.0.5",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "jest": "^27.3.0"
   }
 }
