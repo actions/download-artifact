@@ -8,6 +8,10 @@ inputs:
   path:
     description: 'Destination path'
     required: false
+  dontextract:
+    description: 'Should the artifact be extracted after downloaded. Default behavior is True'
+    required: false
+    default: True
 runs:
   using: 'node16'
   main: 'dist/index.js'
