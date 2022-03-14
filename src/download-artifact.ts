@@ -8,12 +8,12 @@ async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
-    const dontextract = core.getInput(Inputs.Dontextract, {required: false})
-    let stayGzipped
-    if(dontextract == "True") {
-      stayGzipped = True
+    const extract = core.getInput(Inputs.Extract, {required: false})
+    let extractArtifact
+    if(extract == "True") {
+      extractArtifact = True
     } else {
-      stayGzipped = False
+      extractArtifact = False
     }
      
     let resolvedPath
@@ -33,7 +33,8 @@ async function run(): Promise<void> {
         'Creating an extra directory for each artifact that is being downloaded'
       )
       const downloadResponse = await artifactClient.downloadAllArtifacts(
-        resolvedPath
+        resolvedPath,
+        extractArtifact
       )
       core.info(`There were ${downloadResponse.length} artifacts downloaded`)
       for (const artifact of downloadResponse) {
@@ -51,7 +52,7 @@ async function run(): Promise<void> {
         name,
         resolvedPath,
         downloadOptions,
-        stayGzipped
+        extractArtifact
       )
       core.info(
         `Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`
