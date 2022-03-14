@@ -3944,7 +3944,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
             return uploadResponse;
         });
     }
-    downloadArtifact(name, path, options) {
+    downloadArtifact(name, path, options, stayGzipped) {
         return __awaiter(this, void 0, void 0, function* () {
             const downloadHttpClient = new download_http_client_1.DownloadHttpClient();
             const artifacts = yield downloadHttpClient.listArtifacts();
@@ -3973,7 +3973,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
                 yield utils_1.createDirectoriesForArtifact(downloadSpecification.directoryStructure);
                 core.info('Directory structure has been setup for the artifact');
                 yield utils_1.createEmptyFilesForArtifact(downloadSpecification.emptyFilesToCreate);
-                yield downloadHttpClient.downloadSingleArtifact(downloadSpecification.filesToDownload);
+                yield downloadHttpClient.downloadSingleArtifact(downloadSpecification.filesToDownload, stayGzipped);
             }
             return {
                 artifactName: name,
@@ -3981,7 +3981,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
             };
         });
     }
-    downloadAllArtifacts(path) {
+    downloadAllArtifacts(path, stayGzipped) {
         return __awaiter(this, void 0, void 0, function* () {
             const downloadHttpClient = new download_http_client_1.DownloadHttpClient();
             const response = [];
@@ -4009,7 +4009,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
                 else {
                     yield utils_1.createDirectoriesForArtifact(downloadSpecification.directoryStructure);
                     yield utils_1.createEmptyFilesForArtifact(downloadSpecification.emptyFilesToCreate);
-                    yield downloadHttpClient.downloadSingleArtifact(downloadSpecification.filesToDownload);
+                    yield downloadHttpClient.downloadSingleArtifact(downloadSpecification.filesToDownload, stayGzipped);
                 }
                 response.push({
                     artifactName: currentArtifactToDownload.name,
@@ -6954,6 +6954,7 @@ var Inputs;
 (function (Inputs) {
     Inputs["Name"] = "name";
     Inputs["Path"] = "path";
+    Inputs["stayGzipped"] = "staygzipped";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
@@ -7009,6 +7010,7 @@ function run() {
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
+            const stayGzipped = core.getInput(constants_1.Inputs.stayGzipped, { required: false });
             let resolvedPath;
             // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
             if (path.startsWith(`~`)) {
@@ -7023,7 +7025,7 @@ function run() {
                 // download all artifacts
                 core.info('No artifact name specified, downloading all artifacts');
                 core.info('Creating an extra directory for each artifact that is being downloaded');
-                const downloadResponse = yield artifactClient.downloadAllArtifacts(resolvedPath);
+                const downloadResponse = yield artifactClient.downloadAllArtifacts(resolvedPath, stayGzipped);
                 core.info(`There were ${downloadResponse.length} artifacts downloaded`);
                 for (const artifact of downloadResponse) {
                     core.info(`Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`);
@@ -7035,7 +7037,7 @@ function run() {
                 const downloadOptions = {
                     createArtifactFolder: false
                 };
-                const downloadResponse = yield artifactClient.downloadArtifact(name, resolvedPath, downloadOptions);
+                const downloadResponse = yield artifactClient.downloadArtifact(name, resolvedPath, downloadOptions, stayGzipped);
                 core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
             }
             // output the directory that the artifact(s) was/were downloaded to
@@ -7147,7 +7149,7 @@ class DownloadHttpClient {
      * Concurrently downloads all the files that are part of an artifact
      * @param downloadItems information about what items to download and where to save them
      */
-    downloadSingleArtifact(downloadItems) {
+    downloadSingleArtifact(downloadItems, stayGzipped) {
         return __awaiter(this, void 0, void 0, function* () {
             const DOWNLOAD_CONCURRENCY = config_variables_1.getDownloadFileConcurrency();
             // limit the number of files downloaded at a single time
@@ -7163,7 +7165,7 @@ class DownloadHttpClient {
                     const currentFileToDownload = downloadItems[currentFile];
                     currentFile += 1;
                     const startTime = perf_hooks_1.performance.now();
-                    yield this.downloadIndividualFile(index, currentFileToDownload.sourceLocation, currentFileToDownload.targetPath);
+                    yield this.downloadIndividualFile(index, currentFileToDownload.sourceLocation, currentFileToDownload.targetPath, stayGzipped);
                     if (core.isDebug()) {
                         core.debug(`File: ${++downloadedFiles}/${downloadItems.length}. ${currentFileToDownload.targetPath} took ${(perf_hooks_1.performance.now() - startTime).toFixed(3)} milliseconds to finish downloading`);
                     }
@@ -7186,7 +7188,7 @@ class DownloadHttpClient {
      * @param artifactLocation origin location where a file will be downloaded from
      * @param downloadPath destination location for the file being downloaded
      */
-    downloadIndividualFile(httpClientIndex, artifactLocation, downloadPath) {
+    downloadIndividualFile(httpClientIndex, artifactLocation, downloadPath, stayGzipped) {
         return __awaiter(this, void 0, void 0, function* () {
             let retryCount = 0;
             const retryLimit = config_variables_1.getRetryLimit();
@@ -7263,7 +7265,7 @@ class DownloadHttpClient {
                     // Instead of using response.readBody(), response.message is a readableStream that can be directly used to get the raw body contents
                     try {
                         const isGzipped = isGzip(response.message.headers);
-                        yield this.pipeResponseToFile(response, destinationStream, isGzipped);
+                        yield this.pipeResponseToFile(response, destinationStream, stayGzipped);
                         if (isGzipped ||
                             isAllBytesReceived(response.message.headers['content-length'], yield utils_1.getFileSize(downloadPath))) {
                             return;
@@ -7299,10 +7301,10 @@ class DownloadHttpClient {
      * @param destinationStream the stream where the file should be written to
      * @param isGzip a boolean denoting if the content is compressed using gzip and if we need to decode it
      */
-    pipeResponseToFile(response, destinationStream, isGzip, forceGzip) {
+    pipeResponseToFile(response, destinationStream, isGzip, stayGzipped) {
         return __awaiter(this, void 0, void 0, function* () {
             yield new Promise((resolve, reject) => {
-                if (isGzip && !forceGzip) {
+                if (isGzip && !stayGzipped) {
                     const gunzip = zlib.createGunzip();
                     response.message
                         .on('error', error => {
