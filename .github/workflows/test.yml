@@ -108,5 +108,55 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
-
       
+    # Test downloading both artifacts at once
+    - name: Download all Artifacts and not ungzipping
+      uses: ./
+      with:
+        path: some/other/pathgz
+        extract: False
+
+    - name: Verify successful download
+      run: |
+        $fileA = "some/other/pathgz/Artifact-A.gz"
+        $fileB = "some/other/pathgz/Artifact-B.gz"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+
+    # Test downloading a single artifact
+    - name: Download artifact A
+      uses: ./
+      with:
+        name: 'Artifact-A'
+        path: some/new/pathgz
+        extract: False
+
+    # Test downloading an artifact using tilde expansion
+    - name: Download artifact A
+      uses: ./
+      with:
+        name: 'Artifact-A'
+        path: ~/some/path/with/a/tildegz
+        extract: False
+
+    - name: Verify successful download
+      run: |
+        $file1 = "some/new/pathgz/file-A.gz"
+        $file2 = "~/some/path/with/a/tildegz/file-A.gz"
+        if(!(Test-Path -path $file1) -or !(Test-Path -path $file2))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $file1) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $file2) -ceq "Lorem ipsum dolor sit amet"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
