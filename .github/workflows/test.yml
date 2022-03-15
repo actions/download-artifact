@@ -8,7 +8,6 @@ on:
       - '**.md'
 
 jobs:
-
   build:
     name: Build
 
