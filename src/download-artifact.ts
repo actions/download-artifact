@@ -11,9 +11,9 @@ async function run(): Promise<void> {
     const extract = core.getInput(Inputs.Extract, {required: false})
     let extractArtifact
     if(extract == "True") {
-      extractArtifact = True
+      extractArtifact = true
     } else {
-      extractArtifact = False
+      extractArtifact = fallse
     }
      
     let resolvedPath
