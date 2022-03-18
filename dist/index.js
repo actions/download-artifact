@@ -4239,6 +4239,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
             let downloadedArtifacts = 0;
             while (downloadedArtifacts < artifacts.count) {
                 const currentArtifactToDownload = artifacts.value[downloadedArtifacts];
+		core.info(`current artifact is ${currentArtifactToDownload}`)
                 downloadedArtifacts += 1;
                 core.info(`starting download of artifact ${currentArtifactToDownload.name} : ${downloadedArtifacts}/${artifacts.count}`);
                 // Get container entries for the specific artifact
@@ -6421,6 +6422,7 @@ class DownloadHttpClient {
                     currentFile += 1;
                     const startTime = perf_hooks_1.performance.now();
                     yield this.downloadIndividualFile(index, currentFileToDownload.sourceLocation, currentFileToDownload.targetPath, currentFileToDownload.extract);
+		    core.info(`extract on curfile is ${currentFileToDownload.extract}`)
                     if (core.isDebug()) {
                         core.debug(`File: ${++downloadedFiles}/${downloadItems.length}. ${currentFileToDownload.targetPath} took ${(perf_hooks_1.performance.now() - startTime).toFixed(3)} milliseconds to finish downloading`);
                     }
@@ -6442,6 +6444,7 @@ class DownloadHttpClient {
      * @param httpClientIndex the index of the http client that is used to make all of the calls
      * @param artifactLocation origin location where a file will be downloaded from
      * @param downloadPath destination location for the file being downloaded
+     * @param extract shouldl we extract
      */
     downloadIndividualFile(httpClientIndex, artifactLocation, downloadPath, extract) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -6523,7 +6526,7 @@ class DownloadHttpClient {
                         // check if the extract parameter is true, which by default it will be, and if so determine if the file is decompressable and decompress it.
                         // if extract parameter is set to be false, don't even check if its a compressed file, just download the file as-is
                         const gunzip = isGzipped && extract ? true : false;
-			core.info(`Calling pipeResponseToFile with ${gunzip} as  gunzip value and ${isGzipped} as izgzipped value ${isGzipped}`)
+			core.info(`Calling pipeResponseToFile with ${gunzip} as  gunzip value and ${isGzipped} as izgzipped value and extract ${extract}`)
                         yield this.pipeResponseToFile(response, destinationStream, gunzip);
                         if (gunzip ||
                             isAllBytesReceived(response.message.headers['content-length'], yield utils_1.getFileSize(downloadPath))) {
