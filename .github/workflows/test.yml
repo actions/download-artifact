@@ -82,7 +82,7 @@ jobs:
       with:
         path: some/other/path
         
-    - run: ls -la .
+    - run: ls -lR some
 
     - name: Verify successful download
       run: |
@@ -107,7 +107,7 @@ jobs:
         path: some/other/pathgz
         extract: False
 
-    - run: ls -la .
+    - run: ls -la some
 
 
     - name: Verify successful download
@@ -141,7 +141,7 @@ jobs:
         path: ~/some/path/with/a/tildegz
         extract: False
 
-    - run: ls -la .
+    - run: ls -la R some
 
     - name: Verify successful download
       run: |
