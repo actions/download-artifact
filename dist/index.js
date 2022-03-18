@@ -6453,6 +6453,7 @@ class DownloadHttpClient {
             let destinationStream = fs.createWriteStream(downloadPath);
             const headers = utils_1.getDownloadHeaders('application/json', true, true);
             // a single GET request is used to download a file
+	    core.info(`making dl request  with ${artifactLocation} and ${downloadPath}`)
             const makeDownloadRequest = () => __awaiter(this, void 0, void 0, function* () {
                 const client = this.downloadHttpManager.getClient(httpClientIndex);
                 return yield client.get(artifactLocation, headers);
@@ -6462,6 +6463,7 @@ class DownloadHttpClient {
                 return ('content-encoding' in incomingHeaders &&
                     incomingHeaders['content-encoding'] === 'gzip');
             };
+	    core.info(`THE HEADER IS ${isGzip} FOR GZIP`)
             // Increments the current retry count and then checks if the retry limit has been reached
             // If there have been too many retries, fail so the download stops. If there is a retryAfterValue value provided,
             // it will be used
