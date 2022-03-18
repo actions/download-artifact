@@ -36,6 +36,12 @@ jobs:
         echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
     
+    - name: Upload both art
+      uses: actions/upload-artifact@v1
+      with:
+        name: 'Artifacts'
+        path: path/to
+    
     - name: Upload artifact A
       uses: actions/upload-artifact@v1
       with:
@@ -98,7 +104,13 @@ jobs:
         }
       shell: pwsh
       
-      
+    - name: Download all Artifacts
+      uses: ./
+      with:
+        name: 'Artifacts'
+        path: some/other/pathart
+        
+    - run: ls -lR some
       
     # Test downloading both artifacts at once
     - name: Download all Artifacts and not ungzipping
