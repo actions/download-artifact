@@ -7065,16 +7065,17 @@ function run() {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
             const extract = core.getInput(constants_1.Inputs.Extract, { required: false });
-	    core.info(`constants inputs ${constants_1.Inputs}`);
+	    core.info(`constants inputs ${JSON.stringify(constants_1.Inputs)}`);
 	    core.info(`Extract name was ${constants_1.Inputs.Name}`);
+	    core.info(`Extract name was ${constants_1.Inputs.Path}`);
 	    core.info(`Extract input was ${constants_1.Inputs.Extract}`);
             let extractArtifact;
             if (extract == "True") {
-		core.info("Extract was true ${extract}");
+		core.info(`Extract was true ${extract}`);
                 extractArtifact = true;
             }
             else {
-		core.info("Extract was false ${extract}");
+		core.info`Extract was false ${extract}`);
                 extractArtifact = false;
             }
             let resolvedPath;
