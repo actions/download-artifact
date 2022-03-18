@@ -6523,6 +6523,7 @@ class DownloadHttpClient {
                         // check if the extract parameter is true, which by default it will be, and if so determine if the file is decompressable and decompress it.
                         // if extract parameter is set to be false, don't even check if its a compressed file, just download the file as-is
                         const gunzip = isGzipped && extract ? true : false;
+			core.info(`Calling pipeResponseToFile with ${gunzip} as  gunzip value and ${isGzipped} as izgzipped value`)
                         yield this.pipeResponseToFile(response, destinationStream, gunzip);
                         if (gunzip ||
                             isAllBytesReceived(response.message.headers['content-length'], yield utils_1.getFileSize(downloadPath))) {
