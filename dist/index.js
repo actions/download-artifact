@@ -7075,7 +7075,7 @@ function run() {
                 extractArtifact = true;
             }
             else {
-		core.info`Extract was false ${extract}`);
+		core.info(`Extract was false ${extract}`);
                 extractArtifact = false;
             }
             let resolvedPath;
