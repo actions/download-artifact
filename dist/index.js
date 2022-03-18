@@ -6565,6 +6565,8 @@ class DownloadHttpClient {
      */
     pipeResponseToFile(response, destinationStream, isGzip) {
         return __awaiter(this, void 0, void 0, function* () {
+            core.info(`Called with ${izGzip}`)
+            core.info(`Called with ${JSON.stringify(response)}`)
             yield new Promise((resolve, reject) => {
                 if (isGzip) {
                     const gunzip = zlib.createGunzip();
