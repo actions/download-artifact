@@ -81,6 +81,8 @@ jobs:
       uses: ./
       with:
         path: some/other/path
+        
+    - run: ls -la .
 
     - name: Verify successful download
       run: |
@@ -96,12 +98,17 @@ jobs:
         }
       shell: pwsh
       
+      
+      
     # Test downloading both artifacts at once
     - name: Download all Artifacts and not ungzipping
       uses: ./
       with:
         path: some/other/pathgz
         extract: False
+
+    - run: ls -la .
+
 
     - name: Verify successful download
       run: |
@@ -133,6 +140,8 @@ jobs:
         name: 'Artifact-A'
         path: ~/some/path/with/a/tildegz
         extract: False
+
+    - run: ls -la .
 
     - name: Verify successful download
       run: |
