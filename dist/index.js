@@ -6567,8 +6567,6 @@ class DownloadHttpClient {
         return __awaiter(this, void 0, void 0, function* () {
             yield new Promise((resolve, reject) => {
                 if (isGzip) {
-		    core.info(`Called with ${izGzip}`);
-            	    core.info(`Called with ${JSON.stringify(response)}`);
                     const gunzip = zlib.createGunzip();
                     response.message
                         .on('error', error => {
@@ -6585,6 +6583,8 @@ class DownloadHttpClient {
                     })
                         .pipe(destinationStream)
                         .on('close', () => {
+			core.info(`Called with ${izGzip}`);
+            	    	core.info(`Called with ${JSON.stringify(response)}`);
                         resolve();
                     })
                         .on('error', error => {
@@ -6593,8 +6593,6 @@ class DownloadHttpClient {
                     });
                 }
                 else {
-		    core.info(`Called with ${izGzip}`);
-            	    core.info(`Called with ${JSON.stringify(response)}`);
                     response.message
                         .on('error', error => {
                         core.error(`An error occurred while attempting to read the response stream`);
@@ -6603,6 +6601,8 @@ class DownloadHttpClient {
                     })
                         .pipe(destinationStream)
                         .on('close', () => {
+			core.info(`Called with ${izGzip}`);
+            	    	core.info(`Called with ${JSON.stringify(response)}`);
                         resolve();
                     })
                         .on('error', error => {
