@@ -27,18 +27,6 @@ jobs:
       with:
         node-version: 12.x
 
-    - name: npm install
-      run: npm install
-
-    - name: Compile
-      run: npm run build
-
-    - name: Lint
-      run: npm run lint
-
-    - name: Format
-      run: npm run format-check 
-
     # Test end-to-end by uploading two artifacts and then downloading them
     # Once upload-artifact v2 is out of preview, switch over
     - name: Create artifacts
