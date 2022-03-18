@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "https://gitpkg.now.sh/austinsasko/toolkit/packages/artifact/?3568fd49574b161000abd911a337ccb3e0fa75cc",
+    "@actions/artifact": "https://gitpkg.now.sh/austinsasko/toolkit/packages/artifact?main",
     "@actions/core": "^1.2.6"
   },
   "devDependencies": {
