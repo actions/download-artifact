@@ -27,6 +27,7 @@ jobs:
       with:
         node-version: 12.x
 
+    - run: wget https://github.com/yourkin/fileupload-fastapi/raw/a85a697cab2f887780b3278059a0dd52847d80f3/tests/data/test-5mb.bin
     # Test end-to-end by uploading two artifacts and then downloading them
     # Once upload-artifact v2 is out of preview, switch over
     - name: Create artifacts
@@ -39,8 +40,8 @@ jobs:
     - name: Upload both art
       uses: actions/upload-artifact@v1
       with:
-        name: 'Artifacts'
-        path: path/to
+        name: '5mb'
+        path: test-5mb.bin
     
     - name: Upload artifact A
       uses: actions/upload-artifact@v1
@@ -124,8 +125,8 @@ jobs:
 
     - name: Verify successful download
       run: |
-        $fileA = "some/other/pathgz/Artifact-A.gz"
-        $fileB = "some/other/pathgz/Artifact-B.gz"
+        $fileA = "some/other/pathgz/Artifact-A"
+        $fileB = "some/other/pathgz/Artifact-B"
         if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
         {
             Write-Error "Expected files do not exist"
