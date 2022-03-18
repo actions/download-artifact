@@ -4239,11 +4239,11 @@ Note: The size of downloaded zips can differ significantly from the reported siz
             let downloadedArtifacts = 0;
             while (downloadedArtifacts < artifacts.count) {
                 const currentArtifactToDownload = artifacts.value[downloadedArtifacts];
-		core.info(`current artifact is ${currentArtifactToDownload}`)
                 downloadedArtifacts += 1;
                 core.info(`starting download of artifact ${currentArtifactToDownload.name} : ${downloadedArtifacts}/${artifacts.count}`);
                 // Get container entries for the specific artifact
                 const items = yield downloadHttpClient.getContainerItems(currentArtifactToDownload.name, currentArtifactToDownload.fileContainerResourceUrl);
+		core.info(`Extract is ${extractArtifact}`);
                 const downloadSpecification = download_specification_1.getDownloadSpecification(currentArtifactToDownload.name, items.value, path, true, extractArtifact);
                 if (downloadSpecification.filesToDownload.length === 0) {
                     core.info(`No downloadable files were found for any artifact ${currentArtifactToDownload.name}`);
@@ -7067,9 +7067,11 @@ function run() {
             const extract = core.getInput(constants_1.Inputs.Extract, { required: false });
             let extractArtifact;
             if (extract === "True") {
+		core.info("Extract was true");
                 extractArtifact = true;
             }
             else {
+		core.info("Extract was false");
                 extractArtifact = false;
             }
             let resolvedPath;
