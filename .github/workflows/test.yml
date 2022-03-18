@@ -104,12 +104,7 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
-      
-    - name: Download all Artifacts
-      uses: ./
-      with:
-        name: 'Artifacts'
-        path: some/other/pathart
+
         
     - run: ls -lR some
       
