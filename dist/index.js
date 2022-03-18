@@ -6583,8 +6583,7 @@ class DownloadHttpClient {
                     })
                         .pipe(destinationStream)
                         .on('close', () => {
-			core.info(`Called with ${isGzip}`);
-            	    	core.info(`Called with ${JSON.stringify(response)}`);
+			core.info(`Called with AN ${isGzip}`);
                         resolve();
                     })
                         .on('error', error => {
@@ -6601,8 +6600,7 @@ class DownloadHttpClient {
                     })
                         .pipe(destinationStream)
                         .on('close', () => {
-			core.info(`Called with ${isGzip}`);
-            	    	core.info(`Called with ${JSON.stringify(response)}`);
+			core.info(`Called wit NA ${isGzip}`);
                         resolve();
                     })
                         .on('error', error => {
