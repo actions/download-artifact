@@ -40,7 +40,9 @@ async function run(): Promise<void> {
     }
     core.debug(`Resolved path is ${resolvedPath}`)
     const s3 = new AWS.S3({region: region})
-    const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}/`
+    // TODO: This is a temporary bandaid, see https://github.com/actions/toolkit/pull/1027
+    const runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT as string, 10)
+    const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${runAttempt}/${name}/`
     const s3Params = {
       Bucket: s3Bucket,
       Prefix: s3Prefix

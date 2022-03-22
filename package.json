@@ -4,6 +4,7 @@
   "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
   "main": "dist/index.js",
   "scripts": {
+    "all": "npm run format && npm run build && npm run release",
     "build": "tsc",
     "release": "ncc build src/download-artifact.ts",
     "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:build\"",
