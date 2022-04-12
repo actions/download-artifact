@@ -17,18 +17,27 @@ async function run(): Promise<void> {
     } else {
       const waitTimeoutSeconds = parseInt(waitTimeoutStr)
       runDownload = async <T extends unknown>(action: () => T) => {
-        const waitUntil = new Date().getSeconds() + waitTimeoutSeconds
+        const waitUntil = Date.now() + waitTimeoutSeconds * 1000
         let lastError
         do {
           try {
             return await action()
           } catch (e) {
             lastError = e
-            core.info('Waiting for the artifact to become available...')
+            core.info(
+              'Waiting for the artifact to become available... ' +
+                `Remaining time until timeout: ${Math.max(
+                  0,
+                  Math.floor((waitUntil - Date.now()) / 1000)
+                )} seconds`
+            )
             await new Promise(f => setTimeout(f, 10000))
           }
-        } while (new Date().getSeconds() < waitUntil)
-        throw Error('Timeout reached. Latest error: ' + lastError)
+        } while (Date.now() < waitUntil)
+        throw Error(
+          'Waiting for the artifact has timed out. Latest error was: ' +
+            lastError
+        )
       }
     }
 
