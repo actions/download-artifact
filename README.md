@@ -1,6 +1,8 @@
 # Download-Artifact v3
 
-This downloads artifacts from your build
+[![Test](https://github.com/actions/download-artifact/actions/workflows/test.yml/badge.svg)](https://github.com/actions/download-artifact/actions/workflows/test.yml)
+
+This downloads artifacts from your build.
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
@@ -21,12 +23,12 @@ See [action.yml](action.yml)
 Basic (download to the current working directory):
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
     name: my-artifact
-    
+
 - name: Display structure of downloaded files
   run: ls -R
 ```
@@ -34,13 +36,13 @@ steps:
 Download to a specific directory:
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
     name: my-artifact
     path: path/to/artifact
-    
+
 - name: Display structure of downloaded files
   run: ls -R
   working-directory: path/to/artifact
@@ -93,12 +95,12 @@ Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the direc
 Download all artifacts to a specific directory
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
     path: path/to/artifacts
-    
+
 - name: Display structure of downloaded files
   run: ls -R
   working-directory: path/to/artifacts
@@ -107,7 +109,7 @@ steps:
 Download all artifacts to the current working directory
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
 
@@ -121,7 +123,7 @@ The `download-path` step output contains information regarding where the artifac
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   id: download
@@ -157,7 +159,7 @@ If file permissions and case sensitivity are required, you can `tar` all of your
     uses: actions/upload-artifact@v2
     with:
       name: my-artifact
-      path: my_files.tar    
+      path: my_files.tar
 ```
 
 # @actions/artifact package
