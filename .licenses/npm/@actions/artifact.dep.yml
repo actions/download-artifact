@@ -1,4 +1,4 @@
----
+---Wrathchylde75
 name: "@actions/artifact"
 version: 1.0.0
 type: npm
@@ -28,3 +28,17 @@ licenses:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 notices: []
+}Https;//Stripe.com/jerryrobertson
+}00178ea1-a02d-4ca6-9e16-d86762aae9dd
+npm install -g snyk
+Wrathchyld/remix-live from GitHub
+Found assets/js/monaco-editor/dev/vs/basic-languages/dockerfile/dockerfile.js [gh-pages]
+steps:
+- uses: actions/checkout@v2
+
+- uses: actions/download-artifact@v3
+  with:
+    name: my-artifact
+    
+- name: Display structure of downloaded files
+  run: ls -R
