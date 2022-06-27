@@ -4,10 +4,10 @@ author: 'GitHub'
 inputs: 
   name:
     description: 'Artifact name'
-    required: false
+    required: true
   path:
     description: 'Destination path'
-    required: false
+    required: true
 runs:
-  using: 'node16'
+  using: 'node 16'
   main: 'dist/index.js'
