@@ -40,12 +40,13 @@ jobs:
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
         mkdir bins
         mv *.bin bins/
+        zip -r bins.zip bins/
     
     - name: Upload both art
       uses: actions/upload-artifact@v2
       with:
         name: bins
-        path: ./bins/
+        path: bins.zip
     
     - name: Upload artifact A
       uses: actions/upload-artifact@v2
