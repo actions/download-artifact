@@ -28,8 +28,8 @@ jobs:
         node-version: 12.x
 
     - run: |
-      wget https://github.com/yourkin/fileupload-fastapi/raw/a85a697cab2f887780b3278059a0dd52847d80f3/tests/data/test-5mb.bin
-      gzip test-5mb.bin
+        wget https://github.com/yourkin/fileupload-fastapi/raw/a85a697cab2f887780b3278059a0dd52847d80f3/tests/data/test-5mb.bin
+        gzip test-5mb.bin
     # Test end-to-end by uploading two artifacts and then downloading them
     # Once upload-artifact v2 is out of preview, switch over
     - name: Create artifacts
