@@ -6396,6 +6396,7 @@ class DownloadHttpClient {
         return __awaiter(this, void 0, void 0, function* () {
             // the itemPath search parameter controls which containers will be returned
             const resourceUrl = new url_1.URL(containerUrl);
+            console.log("appending itempath of " + artifactName)
             resourceUrl.searchParams.append('itemPath', artifactName);
             // use the first client from the httpManager, `keep-alive` is not used so the connection will close immediately
             const client = this.downloadHttpManager.getClient(0);
