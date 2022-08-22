@@ -38,19 +38,19 @@ jobs:
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
     
     - name: Upload both art
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: '5mb'
         path: test-5mb.bin
     
     - name: Upload artifact A
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: 'Artifact-A'
         path: path/to/artifact-A
 
     - name: Upload artifact B
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: 'Artifact-B'
         path: path/to/artifact-B
