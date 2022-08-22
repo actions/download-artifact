@@ -4241,7 +4241,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
             let downloadedArtifacts = 0;
             while (downloadedArtifacts < artifacts.count) {
                 const currentArtifactToDownload = artifacts.value[downloadedArtifacts];
-                console.log("current art: " + currentArtifactToDownload)
+                console.log("current art: " + JSON.stringify(currentArtifactToDownload))
                 downloadedArtifacts += 1;
                 core.info(`starting download of artifact ${currentArtifactToDownload.name} : ${downloadedArtifacts}/${artifacts.count}`);
                 // Get container entries for the specific artifact
