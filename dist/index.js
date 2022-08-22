@@ -6403,6 +6403,7 @@ class DownloadHttpClient {
             const headers = utils_1.getDownloadHeaders('application/json');
             const response = yield requestUtils_1.retryHttpClientRequest('Get Container Items', () => __awaiter(this, void 0, void 0, function* () { return client.get(resourceUrl.toString(), headers); }));
             const body = yield response.readBody();
+            console.log("body of gci: " + JSON.stringify(body))
             return JSON.parse(body);
         });
     }
