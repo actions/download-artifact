@@ -4155,6 +4155,7 @@ For more detailed logs during the artifact upload process, enable step-debugging
                 }
                 core.debug(`Upload Resource URL: ${response.fileContainerResourceUrl}`);
                 core.info(`Container for artifact "${name}" successfully created. Starting upload of file(s)`);
+                console.log("US :" + uploadSpecification)
                 // Upload each of the files that were found concurrently
                 const uploadResult = yield uploadHttpClient.uploadArtifactToFileContainer(response.fileContainerResourceUrl, uploadSpecification, options);
                 // Update the size of the artifact to indicate we are done uploading
