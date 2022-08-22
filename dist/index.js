@@ -4231,6 +4231,7 @@ Note: The size of downloaded zips can differ significantly from the reported siz
                 core.info('Unable to find any artifacts for the associated workflow');
                 return response;
             }
+            console.log(artifacts)
             if (!path) {
                 path = config_variables_1.getWorkSpaceDirectory();
             }
@@ -6454,7 +6455,7 @@ class DownloadHttpClient {
             let destinationStream = fs.createWriteStream(downloadPath);
             const headers = utils_1.getDownloadHeaders('application/json', true, true);
             // a single GET request is used to download a file
-	    core.info(`making dl request  with ${artifactLocation} and ${downloadPath}`)
+	    core.info(`making dl request with ${artifactLocation} and ${downloadPath}`)
             const makeDownloadRequest = () => __awaiter(this, void 0, void 0, function* () {
                 const client = this.downloadHttpManager.getClient(httpClientIndex);
                 return yield client.get(artifactLocation, headers);
