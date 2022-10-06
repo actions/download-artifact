@@ -34,7 +34,7 @@ steps:
 Download to a specific directory:
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
@@ -93,7 +93,7 @@ Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the direc
 Download all artifacts to a specific directory
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
@@ -107,7 +107,7 @@ steps:
 Download all artifacts to the current working directory
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
 
@@ -121,7 +121,7 @@ The `download-path` step output contains information regarding where the artifac
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   id: download
@@ -154,7 +154,7 @@ If file permissions and case sensitivity are required, you can `tar` all of your
     run: tar -cvf my_files.tar /path/to/my/directory
 
   - name: 'Upload Artifact'
-    uses: actions/upload-artifact@v2
+    uses: actions/upload-artifact@v3
     with:
       name: my-artifact
       path: my_files.tar    
