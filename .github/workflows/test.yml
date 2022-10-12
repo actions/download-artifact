@@ -38,7 +38,7 @@ jobs:
       run: npm run lint
 
     - name: Format
-      run: npm run format-check 
+      run: npm run format-check
 
     # Test end-to-end by uploading two artifacts and then downloading them
     # Once upload-artifact v2 is out of preview, switch over
@@ -48,7 +48,7 @@ jobs:
         mkdir -p path/to/artifact-B
         echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
-    
+
     - name: Upload artifact A
       uses: actions/upload-artifact@v1
       with:
@@ -89,7 +89,56 @@ jobs:
         }
       shell: pwsh
 
-    # Test downloading both artifacts at once
+    # Test downloading multiple artifacts to the same path
+    - name: Download artifacts A and B to the same path
+      uses: ./
+      with:
+        name: |
+          Artifact-A
+          Artifact-B
+        path: some/path/for/multiple/files
+
+    - name: Verify successful download
+      run: |
+        $fileA = "some/path/for/multiple/files/file-A.txt"
+        $fileB = "some/path/for/multiple/files/file-B.txt"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    # Test downloading multiple artifacts to different paths
+    - name: Download artifacts A and B to different paths
+      uses: ./
+      with:
+        name: |
+          Artifact-A
+          Artifact-B
+        path: |
+          some/path/for/a
+          some/path/for/b
+
+
+    - name: Verify successful download
+      run: |
+        $fileA = "some/path/for/a/file-A.txt"
+        $fileB = "some/path/for/b/file-B.txt"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    # Test downloading all artifacts
     - name: Download all Artifacts
       uses: ./
       with:
@@ -108,5 +157,3 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
-
-      
