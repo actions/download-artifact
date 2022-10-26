@@ -1,9 +1,9 @@
 ---
 name: tmp-promise
-version: 3.0.3
+version: 2.1.1
 type: npm
 summary: The tmp package with promises support and disposers.
-homepage: 
+homepage: https://github.com/benjamingr/tmp-promise#readme
 license: mit
 licenses:
 - sources: Auto-generated MIT license text
