@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^1.0.0",
+    "@actions/artifact": "^1.1.1",
     "@actions/core": "^1.10.0"
   },
   "devDependencies": {

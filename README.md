@@ -21,7 +21,7 @@ See [action.yml](action.yml)
 Basic (download to the current working directory):
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
@@ -34,7 +34,7 @@ steps:
 Download to a specific directory:
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
@@ -93,7 +93,7 @@ Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the direc
 Download all artifacts to a specific directory
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   with:
@@ -107,7 +107,7 @@ steps:
 Download all artifacts to the current working directory
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
 
@@ -121,7 +121,7 @@ The `download-path` step output contains information regarding where the artifac
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
+- uses: actions/checkout@v3
 
 - uses: actions/download-artifact@v3
   id: download
