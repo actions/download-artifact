@@ -24,10 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Node 18
+      - name: Setup Node 16
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
           cache: 'npm'
 
       - name: Install dependencies
@@ -46,7 +46,7 @@ jobs:
         id: diff
 
       # If index.js was different than expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
         with:
           name: dist

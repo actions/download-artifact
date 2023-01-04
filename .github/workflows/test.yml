@@ -23,10 +23,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Setup Node 18
+    # using node 16 since that is what the latest version of the runner ships with
+    - name: Setup Node 16
       uses: actions/setup-node@v3
       with:
-        node-version: 18.x
+        node-version: 16.x
         cache: 'npm'
 
     - name: npm install
