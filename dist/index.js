@@ -9496,12 +9496,12 @@ function wrappy (fn, cb) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 var Inputs;
 (function (Inputs) {
-    Inputs["Name"] = "name";
-    Inputs["Path"] = "path";
+    Inputs["Names"] = "name";
+    Inputs["Paths"] = "path";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
-    Outputs["DownloadPath"] = "download-path";
+    Outputs["DownloadPaths"] = "download-path";
 })(Outputs = exports.Outputs || (exports.Outputs = {}));
 
 
@@ -9534,44 +9534,94 @@ const artifact = __importStar(__nccwpck_require__(2605));
 const os = __importStar(__nccwpck_require__(2037));
 const path_1 = __nccwpck_require__(1017);
 const constants_1 = __nccwpck_require__(9042);
+function downloadArtifact(name, path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let resolvedPath;
+        // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
+        if (path.startsWith(`~`)) {
+            resolvedPath = path_1.resolve(path.replace('~', os.homedir()));
+        }
+        else {
+            resolvedPath = path_1.resolve(path);
+        }
+        core.debug(`Resolved path is ${resolvedPath}`);
+        const artifactClient = artifact.create();
+        if (!name) {
+            // download all artifacts
+            core.info('No artifact name specified, downloading all artifacts');
+            core.info('Creating an extra directory for each artifact that is being downloaded');
+            const downloadResponse = yield artifactClient.downloadAllArtifacts(resolvedPath);
+            core.info(`There were ${downloadResponse.length} artifacts downloaded`);
+            for (const artifact of downloadResponse) {
+                core.info(`Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`);
+            }
+        }
+        else {
+            // download a single artifact
+            core.info(`Starting download for ${name}`);
+            const downloadOptions = {
+                createArtifactFolder: false
+            };
+            const downloadResponse = yield artifactClient.downloadArtifact(name, resolvedPath, downloadOptions);
+            core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
+        }
+        // output the directory that the artifact(s) was/were downloaded to
+        // if no path is provided, an empty string resolves to the current working directory
+        core.info('Artifact download has finished successfully');
+        return resolvedPath;
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const name = core.getInput(constants_1.Inputs.Name, { required: false });
-            const path = core.getInput(constants_1.Inputs.Path, { required: false });
-            let resolvedPath;
-            // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
-            if (path.startsWith(`~`)) {
-                resolvedPath = path_1.resolve(path.replace('~', os.homedir()));
+            const names = core.getMultilineInput(constants_1.Inputs.Names, { required: false });
+            const paths = core.getMultilineInput(constants_1.Inputs.Paths, { required: false });
+            core.info(`names: '${JSON.stringify(names)}' | length: ${names.length}`);
+            core.info(`paths: '${JSON.stringify(paths)}' | length: ${paths.length}`);
+            let downloadPaths = [];
+            // Names is set and has fewer entries than Paths
+            if (names.length !== 0 && paths.length > names.length) {
+                throw Error(`The input 'path' cannot have more entries than 'name', if 'name' is set.`);
             }
+            // Names is NOT set and Paths has more than 1 entry
+            else if (names.length === 0 && paths.length > 1) {
+                throw Error(`The input 'path' cannot have more than one entry, if 'name' is not set.`);
+            }
+            // Names is NOT set and path has at max 1 entry: download all artifacts
+            else if (names.length === 0 && paths.length <= 1) {
+                const name = names.toString(); // ''
+                const path = paths.toString(); // '' or 'some/path'
+                const downloadPath = yield downloadArtifact(name, path);
+                downloadPaths.push(downloadPath);
+            }
+            // Names has one or more entries and Paths has at max 1 entry
+            else if (names.length >= 1 && paths.length <= 1) {
+                const path = paths.toString(); // '' or 'some/path'
+                names.forEach((name) => __awaiter(this, void 0, void 0, function* () {
+                    const downloadPath = yield downloadArtifact(name, path);
+                    downloadPaths.push(downloadPath);
+                }));
+            }
+            // Names and Paths have the same numbers of entries (more than 1)
+            else if (names.length > 1 &&
+                paths.length > 1 &&
+                names.length === paths.length) {
+                names.forEach((name, index) => __awaiter(this, void 0, void 0, function* () {
+                    const path = paths[index];
+                    const downloadPath = yield downloadArtifact(name, path);
+                    downloadPaths.push(downloadPath);
+                }));
+            }
+            // Unhandled exception
             else {
-                resolvedPath = path_1.resolve(path);
+                throw Error(`Unhandled scenario. This shouldn't happen. It's very likely a bug. :-()`);
             }
-            core.debug(`Resolved path is ${resolvedPath}`);
-            const artifactClient = artifact.create();
-            if (!name) {
-                // download all artifacts
-                core.info('No artifact name specified, downloading all artifacts');
-                core.info('Creating an extra directory for each artifact that is being downloaded');
-                const downloadResponse = yield artifactClient.downloadAllArtifacts(resolvedPath);
-                core.info(`There were ${downloadResponse.length} artifacts downloaded`);
-                for (const artifact of downloadResponse) {
-                    core.info(`Artifact ${artifact.artifactName} was downloaded to ${artifact.downloadPath}`);
-                }
-            }
-            else {
-                // download a single artifact
-                core.info(`Starting download for ${name}`);
-                const downloadOptions = {
-                    createArtifactFolder: false
-                };
-                const downloadResponse = yield artifactClient.downloadArtifact(name, resolvedPath, downloadOptions);
-                core.info(`Artifact ${downloadResponse.artifactName} was downloaded to ${downloadResponse.downloadPath}`);
-            }
+            // Remove duplicates and empty strings
+            downloadPaths = [...new Set(downloadPaths.filter(path => path !== ''))];
+            // Returns a newline-separated list of paths
+            const output = downloadPaths.join('\n');
             // output the directory that the artifact(s) was/were downloaded to
-            // if no path is provided, an empty string resolves to the current working directory
-            core.setOutput(constants_1.Outputs.DownloadPath, resolvedPath);
-            core.info('Artifact download has finished successfully');
+            core.setOutput(constants_1.Outputs.DownloadPaths, output);
         }
         catch (err) {
             core.setFailed(err.message);
