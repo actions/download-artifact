@@ -1,7 +1,7 @@
 export enum Inputs {
-  Name = 'name',
-  Path = 'path'
+  Names = 'name',
+  Paths = 'path'
 }
 export enum Outputs {
-  DownloadPath = 'download-path'
+  DownloadPaths = 'download-path'
 }
