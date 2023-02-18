@@ -77,6 +77,14 @@ jobs:
         name: 'Artifact-A'
         path: ~/some/path/with/a/tilde
 
+    # Test ignoring error if artifact is not found
+    - name: Download artifact doesn't exist
+      uses: ./
+      with:
+        name: 'Artifact-not-exist'
+        path: path/to/artifact-not-exist
+        if-no-artifact: 'ignore'
+
     - name: Verify successful download
       run: |
         $file1 = "some/new/path/file-A.txt"
