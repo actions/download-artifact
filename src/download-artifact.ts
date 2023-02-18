@@ -5,9 +5,12 @@ import {resolve} from 'path'
 import {Inputs, Outputs} from './constants'
 
 async function run(): Promise<void> {
+  let ifNoArtifact = ''
   try {
     const name = core.getInput(Inputs.Name, {required: false})
     const path = core.getInput(Inputs.Path, {required: false})
+    ifNoArtifact =
+      core.getInput(Inputs.IfNoArtifact, {required: false}) || 'fail'
 
     let resolvedPath
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
@@ -54,7 +57,18 @@ async function run(): Promise<void> {
     core.setOutput(Outputs.DownloadPath, resolvedPath)
     core.info('Artifact download has finished successfully')
   } catch (err) {
-    core.setFailed(err.message)
+    const {message} = err as Error
+    switch (ifNoArtifact) {
+      case 'warn':
+        core.warning(message)
+        break
+      case 'ignore':
+        core.info(message)
+        break
+      case 'fail':
+      default:
+        core.setFailed(message)
+    }
   }
 }
 
