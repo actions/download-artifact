@@ -9498,6 +9498,7 @@ var Inputs;
 (function (Inputs) {
     Inputs["Name"] = "name";
     Inputs["Path"] = "path";
+    Inputs["IfNoArtifact"] = "if-no-artifact";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
@@ -9536,9 +9537,12 @@ const path_1 = __nccwpck_require__(1017);
 const constants_1 = __nccwpck_require__(9042);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        let ifNoArtifact = '';
         try {
             const name = core.getInput(constants_1.Inputs.Name, { required: false });
             const path = core.getInput(constants_1.Inputs.Path, { required: false });
+            ifNoArtifact =
+                core.getInput(constants_1.Inputs.IfNoArtifact, { required: false }) || 'fail';
             let resolvedPath;
             // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
             if (path.startsWith(`~`)) {
@@ -9574,7 +9578,18 @@ function run() {
             core.info('Artifact download has finished successfully');
         }
         catch (err) {
-            core.setFailed(err.message);
+            const { message } = err;
+            switch (ifNoArtifact) {
+                case 'warn':
+                    core.warning(message);
+                    break;
+                case 'ignore':
+                    core.info(message);
+                    break;
+                case 'fail':
+                default:
+                    core.setFailed(message);
+            }
         }
     });
 }

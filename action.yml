@@ -8,6 +8,10 @@ inputs:
   path:
     description: 'Destination path'
     required: false
+  if-no-artifact:
+    description: 'How to exit action if no artifact is found. Can be fail, warn or ignore'
+    default: 'fail'
+    required: false
 outputs:
   download-path:
     description: 'Path of artifact download'
