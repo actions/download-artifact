@@ -21,12 +21,14 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - name: Set Node.js 12.x
-      uses: actions/setup-node@v1
+    # using node 16 since that is what the latest version of the runner ships with
+    - name: Setup Node 16
+      uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 16.x
+        cache: 'npm'
 
     - name: npm install
       run: npm install
@@ -68,16 +70,24 @@ jobs:
         name: 'Artifact-A'
         path: some/new/path
 
+    # Test downloading an artifact using tilde expansion
+    - name: Download artifact A
+      uses: ./
+      with:
+        name: 'Artifact-A'
+        path: ~/some/path/with/a/tilde
+
     - name: Verify successful download
       run: |
-        $file = "some/new/path/file-A.txt"
-        if(!(Test-Path -path $file))
+        $file1 = "some/new/path/file-A.txt"
+        $file2 = "~/some/path/with/a/tilde/file-A.txt"
+        if(!(Test-Path -path $file1) -or !(Test-Path -path $file2))
         {
-            Write-Error "Expected file does not exist"
+            Write-Error "Expected files do not exist"
         }
-        if(!((Get-Content $file) -ceq "Lorem ipsum dolor sit amet"))
+        if(!((Get-Content $file1) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $file2) -ceq "Lorem ipsum dolor sit amet"))
         {
-            Write-Error "File contents of downloaded artifact are incorrect"
+            Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
 

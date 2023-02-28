@@ -1,6 +1,6 @@
 {
   "name": "download-artifact",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
   "main": "dist/index.js",
   "scripts": {
@@ -27,15 +27,17 @@
     "url": "https://github.com/actions/download-artifact/issues"
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
+  "dependencies": {
+    "@actions/artifact": "^1.1.1",
+    "@actions/core": "^1.10.0"
+  },
   "devDependencies": {
-    "@actions/artifact": "^0.3.1",
-    "@actions/core": "^1.2.4",
     "@types/node": "^12.12.6",
-    "@typescript-eslint/parser": "^2.30.0",
-    "@zeit/ncc": "^0.22.1",
+    "@typescript-eslint/eslint-plugin": "^5.40.1",
+    "@vercel/ncc": "^0.33.4",
     "concurrently": "^5.2.0",
     "eslint": "^7.4.0",
-    "eslint-plugin-github": "^3.4.1",
+    "eslint-plugin-github": "^4.1.1",
     "prettier": "^2.0.5",
     "typescript": "^3.8.3"
   }

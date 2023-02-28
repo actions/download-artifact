@@ -8,6 +8,9 @@ inputs:
   path:
     description: 'Destination path'
     required: false
+outputs:
+  download-path:
+    description: 'Path of artifact download'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
