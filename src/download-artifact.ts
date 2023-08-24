@@ -22,6 +22,10 @@ async function run(): Promise<void> {
     runID: parseInt(core.getInput(Inputs.RunID, {required: true}))
   }
 
+  if (!inputs.path) {
+    inputs.path = process.env['GITHUB_WORKSPACE'] || process.cwd()
+  }
+
   if (inputs.path.startsWith(`~`)) {
     inputs.path = inputs.path.replace('~', os.homedir())
   }
@@ -77,7 +81,7 @@ async function run(): Promise<void> {
 
   const downloadPromises = artifacts.map(artifact =>
     artifactClient.downloadArtifact(artifact.id, owner, repo, inputs.token, {
-      path: resolvedPath
+      path: path.join(resolvedPath, artifact.name)
     })
   )
 
