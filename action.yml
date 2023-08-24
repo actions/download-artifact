@@ -1,13 +1,26 @@
 name: 'Download a Build Artifact'
 description: 'Download a build artifact that was previously uploaded in the workflow by the upload-artifact action'
 author: 'GitHub'
-inputs: 
+inputs:
   name:
     description: 'Artifact name'
     required: false
   path:
     description: 'Destination path'
     required: false
+  github-token:
+    description: The GitHub token used to download the artifact
+    default: ${{ github.token }}
+    required: false
+  repository:
+    description: 'The repository owner and the repository name joined together by "/".
+      This specifies the repository that artifacts will be downloaded from. If downloading artifacts from external workflow runs or repositories then the above download-token must be permissions to this repository.'
+    required: false
+    default: ${{ github.repository }}
+  run-id:
+    description: 'The id of the workflow run where the desired download artifact was uploaded from. If downloading artifacts from anything other than the current workflow run then this needs to be overwritten.'
+    required: false
+    default: ${{ github.run_id }}
 outputs:
   download-path:
     description: 'Path of artifact download'
