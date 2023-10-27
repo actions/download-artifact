@@ -30,6 +30,7 @@ async function run(): Promise<void> {
     inputs.path = inputs.path.replace('~', os.homedir())
   }
 
+  const isSingleArtifactDownload: boolean = !!inputs.name
   const resolvedPath = path.resolve(inputs.path)
   core.debug(`Resolved path is ${resolvedPath}`)
 
@@ -43,7 +44,9 @@ async function run(): Promise<void> {
   const artifactClient = artifact.create()
   let artifacts: artifact.Artifact[] = []
 
-  if (inputs.name) {
+  if (isSingleArtifactDownload) {
+    core.info(`Downloading single artifact`)
+
     const {artifact: targetArtifact} = await artifactClient.getArtifact(
       inputs.name,
       inputs.runID,
@@ -62,6 +65,8 @@ async function run(): Promise<void> {
 
     artifacts = [targetArtifact]
   } else {
+    core.info(`No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`)
+
     const listArtifactResponse = await artifactClient.listArtifacts(
       inputs.runID,
       owner,
@@ -81,7 +86,7 @@ async function run(): Promise<void> {
 
   const downloadPromises = artifacts.map(artifact =>
     artifactClient.downloadArtifact(artifact.id, owner, repo, inputs.token, {
-      path: path.join(resolvedPath, artifact.name)
+      path: isSingleArtifactDownload ? resolvedPath : path.join(resolvedPath, artifact.name)
     })
   )
 
