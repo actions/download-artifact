@@ -40,10 +40,11 @@ async function run(): Promise<void> {
     )
   }
 
+  const isSingleArtifactDownload = !!inputs.name
   const artifactClient = artifact.create()
   let artifacts: artifact.Artifact[] = []
 
-  if (inputs.name) {
+  if (isSingleArtifactDownload) {
     const {artifact: targetArtifact} = await artifactClient.getArtifact(
       inputs.name,
       inputs.runID,
@@ -81,7 +82,7 @@ async function run(): Promise<void> {
 
   const downloadPromises = artifacts.map(artifact =>
     artifactClient.downloadArtifact(artifact.id, owner, repo, inputs.token, {
-      path: path.join(resolvedPath, artifact.name)
+      path: isSingleArtifactDownload? resolvedPath : path.join(resolvedPath, inputs.name)
     })
   )
 
