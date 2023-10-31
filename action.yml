@@ -25,5 +25,5 @@ outputs:
   download-path:
     description: 'Path of artifact download'
 runs:
-  using: 'node20'
+  using: 'node16'
   main: 'dist/index.js'
