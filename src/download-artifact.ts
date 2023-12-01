@@ -63,9 +63,8 @@ async function run(): Promise<void> {
       throw new Error(`Artifact '${inputs.name}' not found`)
     }
 
-    core.debug(
-      `Found named artifact '${inputs.name}' (ID: ${targetArtifact.id}, Size: ${targetArtifact.size})`
-    )
+    core.debug('Found named artifact:')
+    core.debug(JSON.stringify(targetArtifact, null, 2))
 
     artifacts = [targetArtifact]
   } else {
@@ -77,7 +76,8 @@ async function run(): Promise<void> {
       )
     }
 
-    core.debug(`Found ${listArtifactResponse.artifacts.length} artifacts`)
+    core.debug(`Found ${listArtifactResponse.artifacts.length} artifacts:`)
+    core.debug(JSON.stringify(listArtifactResponse, null, 2))
     artifacts = listArtifactResponse.artifacts
   }
 
