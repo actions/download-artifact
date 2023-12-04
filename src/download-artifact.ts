@@ -76,7 +76,10 @@ async function run(): Promise<void> {
       `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
     )
 
-    const listArtifactResponse = await artifactClient.listArtifacts(options)
+    const listArtifactResponse = await artifactClient.listArtifacts({
+      latest: true,
+      ...options
+    })
 
     if (listArtifactResponse.artifacts.length === 0) {
       throw new Error(
