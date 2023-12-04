@@ -17,9 +17,9 @@ async function run(): Promise<void> {
   const inputs = {
     name: core.getInput(Inputs.Name, {required: false}),
     path: core.getInput(Inputs.Path, {required: false}),
-    token: core.getInput(Inputs.GitHubToken, {required: true}),
-    repository: core.getInput(Inputs.Repository, {required: true}),
-    runID: parseInt(core.getInput(Inputs.RunID, {required: true}))
+    token: core.getInput(Inputs.GitHubToken, {required: false}),
+    repository: core.getInput(Inputs.Repository, {required: false}),
+    runID: parseInt(core.getInput(Inputs.RunID, {required: false}))
   }
 
   if (!inputs.path) {
@@ -30,15 +30,25 @@ async function run(): Promise<void> {
     inputs.path = inputs.path.replace('~', os.homedir())
   }
 
-  const isSingleArtifactDownload: boolean = !!inputs.name
+  const isSingleArtifactDownload = !!inputs.name
   const resolvedPath = path.resolve(inputs.path)
   core.debug(`Resolved path is ${resolvedPath}`)
 
-  const [owner, repo] = inputs.repository.split('/')
-  if (!owner || !repo) {
-    throw new Error(
-      `Invalid repository: '${inputs.repository}'. Must be in format owner/repo`
-    )
+  const options: artifact.FindOptions = {}
+  if (inputs.token) {
+    const [repositoryOwner, repositoryName] = inputs.repository.split('/')
+    if (!repositoryOwner || !repositoryName) {
+      throw new Error(
+        `Invalid repository: '${inputs.repository}'. Must be in format owner/repo`
+      )
+    }
+
+    options.findBy = {
+      token: inputs.token,
+      workflowRunId: inputs.runID,
+      repositoryName,
+      repositoryOwner
+    }
   }
 
   const artifactClient = artifact.create()
@@ -49,10 +59,7 @@ async function run(): Promise<void> {
 
     const {artifact: targetArtifact} = await artifactClient.getArtifact(
       inputs.name,
-      inputs.runID,
-      owner,
-      repo,
-      inputs.token
+      options
     )
 
     if (!targetArtifact) {
@@ -65,14 +72,14 @@ async function run(): Promise<void> {
 
     artifacts = [targetArtifact]
   } else {
-    core.info(`No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`)
-
-    const listArtifactResponse = await artifactClient.listArtifacts(
-      inputs.runID,
-      owner,
-      repo,
-      inputs.token
+    core.info(
+      `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
     )
+
+    const listArtifactResponse = await artifactClient.listArtifacts({
+      latest: true,
+      ...options
+    })
 
     if (listArtifactResponse.artifacts.length === 0) {
       throw new Error(
@@ -85,8 +92,11 @@ async function run(): Promise<void> {
   }
 
   const downloadPromises = artifacts.map(artifact =>
-    artifactClient.downloadArtifact(artifact.id, owner, repo, inputs.token, {
-      path: isSingleArtifactDownload ? resolvedPath : path.join(resolvedPath, artifact.name)
+    artifactClient.downloadArtifact(artifact.id, {
+      ...options,
+      path: isSingleArtifactDownload
+        ? resolvedPath
+        : path.join(resolvedPath, artifact.name)
     })
   )
 
