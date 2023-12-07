@@ -1,7 +1,8 @@
 import * as os from 'os'
 import * as path from 'path'
 import * as core from '@actions/core'
-import * as artifact from '@actions/artifact'
+import artifactClient from '@actions/artifact'
+import type {Artifact, FindOptions} from '@actions/artifact'
 import {Inputs, Outputs} from './constants'
 
 const PARALLEL_DOWNLOADS = 5
@@ -34,7 +35,7 @@ async function run(): Promise<void> {
   const resolvedPath = path.resolve(inputs.path)
   core.debug(`Resolved path is ${resolvedPath}`)
 
-  const options: artifact.FindOptions = {}
+  const options: FindOptions = {}
   if (inputs.token) {
     const [repositoryOwner, repositoryName] = inputs.repository.split('/')
     if (!repositoryOwner || !repositoryName) {
@@ -51,8 +52,7 @@ async function run(): Promise<void> {
     }
   }
 
-  const artifactClient = artifact.create()
-  let artifacts: artifact.Artifact[] = []
+  let artifacts: Artifact[] = []
 
   if (isSingleArtifactDownload) {
     core.info(`Downloading single artifact`)
