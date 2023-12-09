@@ -7864,7 +7864,12 @@ function streamExtract(url, directory) {
         if (response.message.statusCode !== 200) {
             throw new Error(`Unexpected HTTP response from blob storage: ${response.message.statusCode} ${response.message.statusMessage}`);
         }
-        return response.message.pipe(unzip_stream_1.default.Extract({ path: directory })).promise();
+        return new Promise((resolve, reject) => {
+            response.message
+                .pipe(unzip_stream_1.default.Extract({ path: directory }))
+                .on('close', resolve)
+                .on('error', reject);
+        });
     });
 }
 function downloadArtifactPublic(artifactId, repositoryOwner, repositoryName, token, options) {
