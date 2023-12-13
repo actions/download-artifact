@@ -1,169 +1,171 @@
-# Download-Artifact v3
+# `@actions/download-artifact`
 
-This downloads artifacts from your build
+Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts) from your Workflow Runs. Internally powered by [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) package.
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
-# What's new
+- [`@actions/download-artifact`](#actionsdownload-artifact)
+  - [v4 - What's new](#v4---whats-new)
+    - [Improvements](#improvements)
+    - [Breaking Changes](#breaking-changes)
+  - [Usage](#usage)
+    - [Inputs](#inputs)
+    - [Outputs](#outputs)
+  - [Examples](#examples)
+    - [Download Single Artifact](#download-single-artifact)
+    - [Download All Artifacts](#download-all-artifacts)
+    - [Download Artifacts from other Workflow Runs or Repositories](#download-artifacts-from-other-workflow-runs-or-repositories)
+  - [Limitations](#limitations)
+    - [Permission Loss](#permission-loss)
 
-- Download all artifacts at once
-- Output parameter for the download path
-- Port entire action to typescript from a runner plugin so it is easier to collaborate and accept contributions
 
-Refer [here](https://github.com/actions/download-artifact/tree/v2) for the previous version
+## v4 - What's new
 
-# Usage
+> [!IMPORTANT]
+> download-artifact@v4+ is not currently supported on GHES yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3).
 
-See [action.yml](action.yml)
+The release of upload-artifact@v4 and download-artifact@v4 are major changes to the backend architecture of Artifacts. They have numerous performance and behavioral improvements.
 
-# Download a Single Artifact
+For more information, see the [`@actions/artifact`](https://github.com/actions/toolkit/tree/main/packages/artifact) documentation.
 
-Basic (download to the current working directory):
+### Improvements
+
+1. Downloads are significantly faster, upwards of 90% improvement in worst case scenarios.
+2. Artifacts can be downloaded from other workflow runs and repositories when supplied with a PAT.
+
+### Breaking Changes
+
+1. On self hosted runners, additional [firewall rules](https://github.com/actions/toolkit/tree/main/packages/artifact#breaking-changes) may be required.
+2. Downloading artifacts that were created from `action/upload-artifact@v3` and below are not supported.
+
+## Usage
+
+### Inputs
+
+```yaml
+- uses: actions/download-artifact@v4
+  with:
+    # Name of the artifact to download.
+    # Optional. If unspecified, all artifacts for the run are downloaded.
+    name:
+
+    # Destination path. Supports basic tilde expansion.
+    # Optional. Defaults is $GITHUB_WORKSPACE
+    path:
+
+    # The GitHub token used to authenticate with the GitHub API.
+    # This is required when downloading artifacts from a different repository or from a different workflow run.
+    # Optional. If unspecified, the action will download artifacts from the current repo and the current workflow run.
+    github-token:
+
+    # The repository owner and the repository name joined together by "/".
+    # If github-token is specified, this is the repository that artifacts will be downloaded from.
+    # Optional. Default is ${{ github.repository }}
+    repository:
+
+    # The id of the workflow run where the desired download artifact was uploaded from.
+    # If github-token is specified, this is the run that artifacts will be downloaded from.
+    # Optional. Default is ${{ github.repository }}
+    run-id:
+```
+
+### Outputs
+
+| Name | Description | Example |
+| - | - | - |
+| `download-path` | Absolute path where the artifact(s) were downloaded | `/tmp/my/download/path` |
+
+## Examples
+
+### Download Single Artifact
+
+Download to current working directory (`$GITHUB_WORKSPACE`):
+
 ```yaml
 steps:
-- uses: actions/checkout@v3
-
-- uses: actions/download-artifact@v3
+- uses: actions/download-artifact@v4
   with:
     name: my-artifact
-    
 - name: Display structure of downloaded files
   run: ls -R
 ```
 
-Download to a specific directory:
+Download to a specific directory (also supports `~` expansion):
+
 ```yaml
 steps:
-- uses: actions/checkout@v3
-
-- uses: actions/download-artifact@v3
+- uses: actions/download-artifact@v4
   with:
     name: my-artifact
-    path: path/to/artifact
-    
+    path: your/destination/dir
 - name: Display structure of downloaded files
-  run: ls -R
-  working-directory: path/to/artifact
-```
-
-Basic tilde expansion is supported for the `path` input:
-```yaml
-  - uses: actions/download-artifact@v3
-    with:
-      name: my-artifact
-      path: ~/download/path
-```
-
-## Compatibility between `v1` and `v2`/`v3`
-
-When using `download-artifact@v1`, a directory denoted by the name of the artifact would be created if the `path` input was not provided. All of the contents would be downloaded to this directory.
-```
-   current/working/directory/
-      my-artifact/
-          ... contents of my-artifact
-```
-
-With `v2` and `v3`, when an artifact is specified by the `name` input, there is no longer an extra directory that is created if the `path` input is not provided. All the contents are downloaded to the current working directory.
-```
-   current/working/directory/
-      ... contents of my-artifact
-```
-
-To maintain the same behavior for `v2` and `v3`, you can set the `path` to the name of the artifact so an extra directory gets created.
-```
-- uses: actions/download-artifact@v2
-  with:
-    name: my-artifact
-    path: my-artifact
+  run: ls -R your/destination/dir
 ```
 
 
-# Download All Artifacts
+### Download All Artifacts
 
 If the `name` input parameter is not provided, all artifacts will be downloaded. **To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.**
+
 Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the directory is `etc/usr/artifacts/`, the directory structure will look like this:
+
 ```
-  etc/usr/artifacts/
-      Artifact-A/
-          ... contents of Artifact-A
-      Artifact-B/
-          ... contents of Artifact-B
+etc/usr/artifacts/
+    Artifact-A/
+        ... contents of Artifact-A
+    Artifact-B/
+        ... contents of Artifact-B
 ```
 
-Download all artifacts to a specific directory
+Download all artifacts to the current working directory:
+
 ```yaml
 steps:
-- uses: actions/checkout@v3
-
-- uses: actions/download-artifact@v3
-  with:
-    path: path/to/artifacts
-    
-- name: Display structure of downloaded files
-  run: ls -R
-  working-directory: path/to/artifacts
-```
-
-Download all artifacts to the current working directory
-```yaml
-steps:
-- uses: actions/checkout@v3
-
-- uses: actions/download-artifact@v3
-
+- uses: actions/download-artifact@v4
 - name: Display structure of downloaded files
   run: ls -R
 ```
 
-# Download path output
-
-The `download-path` step output contains information regarding where the artifact was downloaded to. This output can be used for a variety of purposes such as logging or as input to other actions. Be aware of the extra directory that is created if downloading all artifacts (no name specified).
+Download all artifacts to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/checkout@v3
-
-- uses: actions/download-artifact@v3
-  id: download
+- uses: actions/download-artifact@v4
   with:
-    name: 'my-artifact'
     path: path/to/artifacts
-
-- name: 'Echo download path'
-  run: echo ${{steps.download.outputs.download-path}}
+- name: Display structure of downloaded files
+  run: ls -R path/to/artifacts
 ```
 
-> Note: The `id` defined in the `download/artifact` step must match the `id` defined in the `echo` step (i.e `steps.[ID].outputs.download-path`)
+### Download Artifacts from other Workflow Runs or Repositories
 
-# Limitations
+It may be useful to download Artifacts from other workflow runs, or even other repositories. By default, the permissions are scoped so they can only download Artifacts within the current workflow run. To elevate permissions for this scenario, you can specify a `github-token` along with other repository and run identifiers:
+
+```yaml
+steps:
+- uses: actions/download-artifact@v4
+  with:
+    name: my-other-artifact
+    github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
+    repository: actions/toolkit
+    run-id: 1234
+```
+
+## Limitations
 
 ### Permission Loss
 
-:exclamation: File permissions are not maintained during artifact upload :exclamation: For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
+File permissions are not maintained during artifact upload. All directories will have `755` and all files will have `644`. For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
 
-### Case Insensitive Uploads
-
-:exclamation: File uploads are case insensitive :exclamation: If you upload `A.txt` and `a.txt` with the same root path, only a single file will be saved and available during download.
-
-### Maintaining file permissions and case sensitive files
-
-If file permissions and case sensitivity are required, you can `tar` all of your files together before artifact upload. Post download, the `tar` file will maintain file permissions and case sensitivity.
+If you must preserve permissions, you can `tar` all of your files together before artifact upload. Post download, the `tar` file will maintain file permissions and case sensitivity.
 
 ```yaml
-  - name: 'Tar files'
-    run: tar -cvf my_files.tar /path/to/my/directory
+- name: 'Tar files'
+  run: tar -cvf my_files.tar /path/to/my/directory
 
-  - name: 'Upload Artifact'
-    uses: actions/upload-artifact@v2
-    with:
-      name: my-artifact
-      path: my_files.tar    
+- name: 'Upload Artifact'
+  uses: actions/upload-artifact@v4
+  with:
+    name: my-artifact
+    path: my_files.tar
 ```
-
-# @actions/artifact package
-
-Internally the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) NPM package is used to interact with artifacts. You can find additional documentation there along with all the source code related to artifact download.
-
-# License
-
-The scripts and documentation in this project are released under the [MIT License](LICENSE)

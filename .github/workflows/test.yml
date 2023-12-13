@@ -8,7 +8,6 @@ on:
       - '**.md'
 
 jobs:
-
   build:
     name: Build
 
@@ -21,13 +20,12 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    # using node 16 since that is what the latest version of the runner ships with
-    - name: Setup Node 16
-      uses: actions/setup-node@v3
+    - name: Setup Node 20
+      uses: actions/setup-node@v4
       with:
-        node-version: 16.x
+        node-version: 20.x
         cache: 'npm'
 
     - name: npm install
@@ -40,25 +38,23 @@ jobs:
       run: npm run lint
 
     - name: Format
-      run: npm run format-check 
+      run: npm run format-check
 
-    # Test end-to-end by uploading two artifacts and then downloading them
-    # Once upload-artifact v2 is out of preview, switch over
     - name: Create artifacts
       run: |
         mkdir -p path/to/artifact-A
         mkdir -p path/to/artifact-B
         echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
-    
+
     - name: Upload artifact A
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4-beta
       with:
         name: 'Artifact-A'
         path: path/to/artifact-A
 
     - name: Upload artifact B
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4-beta
       with:
         name: 'Artifact-B'
         path: path/to/artifact-B
@@ -110,5 +106,3 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
-
-      
