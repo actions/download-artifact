@@ -1,7 +1,7 @@
 {
   "name": "download-artifact",
-  "version": "3.0.0",
-  "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
+  "version": "4.0.0",
+  "description": "Download an Actions Artifact from a workflow run",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

@@ -3,10 +3,10 @@ description: 'Download a build artifact that was previously uploaded in the work
 author: 'GitHub'
 inputs:
   name:
-    description: 'Artifact name'
+    description: 'Name of the artifact to download. If unspecified, all artifacts for the run are downloaded'
     required: false
   path:
-    description: 'Destination path'
+    description: 'Destination path. Supports basic tilde expansion. Defaults to $GITHUB_WORKSPACE'
     required: false
   github-token:
     description: 'The GitHub token used to authenticate with the GitHub API.
