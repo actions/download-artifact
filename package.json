@@ -1,7 +1,7 @@
 {
   "name": "download-artifact",
-  "version": "3.0.0",
-  "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
+  "version": "4.0.0",
+  "description": "Download an Actions Artifact from a workflow run",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -28,8 +28,9 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^1.1.1",
-    "@actions/core": "^1.10.0"
+    "@actions/artifact": "^2.0.0",
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1"
   },
   "devDependencies": {
     "@types/node": "^12.12.6",
