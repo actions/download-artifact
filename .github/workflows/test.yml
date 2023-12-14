@@ -48,13 +48,13 @@ jobs:
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
 
     - name: Upload artifact A
-      uses: actions/upload-artifact@v4-beta
+      uses: actions/upload-artifact@v4
       with:
         name: Artifact-A-${{ matrix.runs-on }}
         path: path/to/artifact-A
 
     - name: Upload artifact B
-      uses: actions/upload-artifact@v4-beta
+      uses: actions/upload-artifact@v4
       with:
         name: Artifact-B-${{ matrix.runs-on }}
         path: path/to/artifact-B
