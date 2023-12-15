@@ -65,7 +65,7 @@ For more information, see the [`@actions/artifact`](https://github.com/actions/t
 
     # The id of the workflow run where the desired download artifact was uploaded from.
     # If github-token is specified, this is the run that artifacts will be downloaded from.
-    # Optional. Default is ${{ github.repository }}
+    # Optional. Default is ${{ github.run_id }}
     run-id:
 ```
 
