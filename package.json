@@ -30,7 +30,8 @@
   "dependencies": {
     "@actions/artifact": "^2.0.0",
     "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1"
+    "@actions/github": "^5.1.1",
+    "minimatch": "^9.0.3"
   },
   "devDependencies": {
     "@types/node": "^12.12.6",
@@ -40,6 +41,6 @@
     "eslint": "^7.4.0",
     "eslint-plugin-github": "^4.1.1",
     "prettier": "^2.0.5",
-    "typescript": "^3.8.3"
+    "typescript": "^5.3.3"
   }
 }

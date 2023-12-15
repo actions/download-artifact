@@ -46,12 +46,24 @@ For more information, see the [`@actions/artifact`](https://github.com/actions/t
 - uses: actions/download-artifact@v4
   with:
     # Name of the artifact to download.
-    # Optional. If unspecified, all artifacts for the run are downloaded.
+    # If unspecified, all artifacts for the run are downloaded.
+    # Optional.
     name:
 
     # Destination path. Supports basic tilde expansion.
-    # Optional. Defaults is $GITHUB_WORKSPACE
+    # Optional. Default is $GITHUB_WORKSPACE
     path:
+
+    # A glob pattern to the artifacts that should be downloaded.
+    # Ignored if name is specified.
+    # Optional.
+    pattern:
+
+    # When multiple artifacts are matched, this changes the behavior of the destination directories.
+    # If true, the downloaded artifacts will be in the same directory specified by path.
+    # If false, the downloaded artifacts will be extracted into individual named directories within the specified path.
+    # Optional. Default is 'false'
+    merge-multiple:
 
     # The GitHub token used to authenticate with the GitHub API.
     # This is required when downloading artifacts from a different repository or from a different workflow run.
