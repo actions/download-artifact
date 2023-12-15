@@ -35,12 +35,13 @@
   },
   "devDependencies": {
     "@types/node": "^12.12.6",
-    "@typescript-eslint/eslint-plugin": "^5.40.1",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@vercel/ncc": "^0.33.4",
     "concurrently": "^5.2.0",
-    "eslint": "^7.4.0",
-    "eslint-plugin-github": "^4.1.1",
-    "prettier": "^2.0.5",
+    "eslint": "^8.55.0",
+    "eslint-plugin-github": "^4.10.1",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.1.1",
     "typescript": "^5.3.3"
   }
 }
