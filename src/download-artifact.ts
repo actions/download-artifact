@@ -20,7 +20,8 @@ async function run(): Promise<void> {
     path: core.getInput(Inputs.Path, {required: false}),
     token: core.getInput(Inputs.GitHubToken, {required: false}),
     repository: core.getInput(Inputs.Repository, {required: false}),
-    runID: parseInt(core.getInput(Inputs.RunID, {required: false}))
+    runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
+    noSeparateDirectories: core.getInput(Inputs.NoSeparateDirectory, {required: false})
   }
 
   if (!inputs.path) {
@@ -31,6 +32,7 @@ async function run(): Promise<void> {
     inputs.path = inputs.path.replace('~', os.homedir())
   }
 
+  const noSeparateDirectories = inputs.noSeparateDirectories === "true";
   const isSingleArtifactDownload = !!inputs.name
   const resolvedPath = path.resolve(inputs.path)
   core.debug(`Resolved path is ${resolvedPath}`)
@@ -72,9 +74,15 @@ async function run(): Promise<void> {
 
     artifacts = [targetArtifact]
   } else {
-    core.info(
-      `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
-    )
+    if (noSeparateDirectories) {
+      core.info(
+        `No input name specified, downloading all artifacts. All downloads will be saved to the same directory`
+      )
+    } else {
+      core.info(
+        `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
+      )
+    }
 
     const listArtifactResponse = await artifactClient.listArtifacts({
       latest: true,
@@ -94,7 +102,7 @@ async function run(): Promise<void> {
   const downloadPromises = artifacts.map(artifact =>
     artifactClient.downloadArtifact(artifact.id, {
       ...options,
-      path: isSingleArtifactDownload
+      path: isSingleArtifactDownload || noSeparateDirectories
         ? resolvedPath
         : path.join(resolvedPath, artifact.name)
     })

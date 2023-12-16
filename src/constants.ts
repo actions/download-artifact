@@ -3,7 +3,8 @@ export enum Inputs {
   Path = 'path',
   GitHubToken = 'github-token',
   Repository = 'repository',
-  RunID = 'run-id'
+  RunID = 'run-id',
+  NoSeparateDirectory = 'no-separate-directory'
 }
 
 export enum Outputs {
