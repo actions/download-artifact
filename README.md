@@ -102,6 +102,15 @@ steps:
   run: ls -R your/destination/dir
 ```
 
+## Name not found
+
+By default, if the name you provided doesn't exists or there are no artifacts, the action will raise an error.
+It is possible to change this behavior using the `if-not-found` optional parameter:
+
+- `error`: output a warning but do not fail the action (default)
+- `warning`: fail the action with an error message
+- `ignore`: do not output any warnings or errors, the action does not fail
+
 
 ### Download All Artifacts
 

@@ -2,8 +2,12 @@ import * as os from 'os'
 import * as path from 'path'
 import * as core from '@actions/core'
 import artifactClient from '@actions/artifact'
-import type {Artifact, FindOptions} from '@actions/artifact'
-import {Inputs, Outputs} from './constants'
+import type {
+  Artifact,
+  FindOptions,
+  GetArtifactResponse
+} from '@actions/artifact'
+import {Inputs, Outputs, NotFoundOptions} from './constants'
 
 const PARALLEL_DOWNLOADS = 5
 
@@ -14,12 +18,43 @@ export const chunk = <T>(arr: T[], n: number): T[][] =>
     return acc
   }, [] as T[][])
 
+function checkIfNotFoundOption(if_not_found: string, message: string) {
+  switch (if_not_found) {
+    case NotFoundOptions.warn: {
+      core.warning(message)
+      break
+    }
+    case NotFoundOptions.error: {
+      core.setFailed(message)
+      break
+    }
+    case NotFoundOptions.ignore: {
+      core.info(message)
+      break
+    }
+  }
+}
+
+async function getArtifact(
+  name: string,
+  if_not_found: string,
+  options: FindOptions
+): Promise<GetArtifactResponse | undefined> {
+  try {
+    return await artifactClient.getArtifact(name, options)
+  } catch (err) {
+    const message = `Artifact '${name}' not found`
+    checkIfNotFoundOption(if_not_found, message)
+  }
+}
+
 async function run(): Promise<void> {
   const inputs = {
     name: core.getInput(Inputs.Name, {required: false}),
     path: core.getInput(Inputs.Path, {required: false}),
     token: core.getInput(Inputs.GitHubToken, {required: false}),
     repository: core.getInput(Inputs.Repository, {required: false}),
+    if_not_found: core.getInput(Inputs.IfNotFound, {required: false}),
     runID: parseInt(core.getInput(Inputs.RunID, {required: false}))
   }
 
@@ -57,20 +92,18 @@ async function run(): Promise<void> {
   if (isSingleArtifactDownload) {
     core.info(`Downloading single artifact`)
 
-    const {artifact: targetArtifact} = await artifactClient.getArtifact(
+    const targetArtifact = await getArtifact(
       inputs.name,
+      inputs.if_not_found,
       options
     )
 
-    if (!targetArtifact) {
-      throw new Error(`Artifact '${inputs.name}' not found`)
+    if (targetArtifact) {
+      core.debug(
+        `Found named artifact '${inputs.name}' (ID: ${targetArtifact.artifact.id}, Size: ${targetArtifact.artifact.size})`
+      )
+      artifacts = [targetArtifact.artifact]
     }
-
-    core.debug(
-      `Found named artifact '${inputs.name}' (ID: ${targetArtifact.id}, Size: ${targetArtifact.size})`
-    )
-
-    artifacts = [targetArtifact]
   } else {
     core.info(
       `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
@@ -82,11 +115,9 @@ async function run(): Promise<void> {
     })
 
     if (listArtifactResponse.artifacts.length === 0) {
-      throw new Error(
-        `No artifacts found for run '${inputs.runID}' in '${inputs.repository}'`
-      )
+      const message = `No artifacts found for run '${inputs.runID}' in '${inputs.repository}'`
+      checkIfNotFoundOption(inputs.if_not_found, message)
     }
-
     core.debug(`Found ${listArtifactResponse.artifacts.length} artifacts`)
     artifacts = listArtifactResponse.artifacts
   }

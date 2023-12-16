@@ -106,3 +106,96 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
+
+  if-not-found-with-name:
+    name: Test `if-not-found` param wih name specified
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Verify not existing artifact with default value
+      id: default
+      continue-on-error: true
+      uses: ./
+      with:
+        name: not-existing-name
+
+    - name: Check default
+      run: ${{ steps.default.outcome == 'failure' }} 
+    
+    - name: Verify not existing artifact `error`
+      id: error
+      continue-on-error: true
+      uses: ./
+      with:
+        name: not-existing-name
+        if-not-found: error
+
+    - name: Check `error`
+      run: ${{ steps.error.outcome == 'failure' }} 
+  
+    - name: Verify not existing artifact `warning`
+      id: warning
+      uses: ./
+      with:
+        name: not-existing-name
+        if-not-found: warn
+
+    - name: Check `warning`
+      run: ${{ steps.warning.outcome == 'success' }} 
+
+    - name: Verify not existing artifact `ignore`
+      id: ignore
+      uses: ./
+      with:
+        name: not-existing-name
+        if-not-found: ignore
+
+    - name: Check `ignore`
+      run: ${{ steps.ignore.outcome == 'success' }} 
+  
+  if-not-found-without-name:
+    name: Test `if-not-found` param wih name specified
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Verify not existing artifact with default value
+      id: default
+      continue-on-error: true
+      uses: ./
+
+    - name: Check default
+      run: ${{ steps.default.outcome == 'failure' }} 
+    
+    - name: Verify not existing artifact `error`
+      id: error
+      continue-on-error: true
+      uses: ./
+      with:
+        if-not-found: error
+
+    - name: Check `error`
+      run: ${{ steps.error.outcome == 'failure' }} 
+  
+    - name: Verify not existing artifact `warning`
+      id: warning
+      uses: ./
+      with:
+        if-not-found: warn
+
+    - name: Check `warning`
+      run: ${{ steps.warning.outcome == 'success' }} 
+
+    - name: Verify not existing artifact `ignore`
+      id: ignore
+      uses: ./
+      with:
+        if-not-found: ignore
+
+    - name: Check `ignore`
+      run: ${{ steps.ignore.outcome == 'success' }} 

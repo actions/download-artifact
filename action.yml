@@ -23,6 +23,10 @@ inputs:
       If github-token is specified, this is the run that artifacts will be downloaded from.'
     required: false
     default: ${{ github.run_id }}
+  if-not-found:
+    description: 'How to behave if no artifact(s) is(are) found'
+    required: false
+    default: error
 outputs:
   download-path:
     description: 'Path of artifact download'
