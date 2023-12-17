@@ -46,8 +46,14 @@ For more information, see the [`@actions/artifact`](https://github.com/actions/t
 - uses: actions/download-artifact@v4
   with:
     # Name of the artifact to download.
-    # Optional. If unspecified, all artifacts for the run are downloaded.
+    # Optional. If unspecified, all artifacts for the run are downloaded, unless restricted by `name-prefix`.
     name:
+
+    # Name prefix of artifacts to download.
+    # If specified, download all artifacts of which the name starts with the given prefix.
+    # This is useful for aggregating artifacts produced by matrix jobs, for example.
+    # Optional; only meaningful if `name` is unspecified. 
+    name-prefix:
 
     # Destination path. Supports basic tilde expansion.
     # Optional. Defaults is $GITHUB_WORKSPACE

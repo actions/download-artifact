@@ -17,6 +17,7 @@ export const chunk = <T>(arr: T[], n: number): T[][] =>
 async function run(): Promise<void> {
   const inputs = {
     name: core.getInput(Inputs.Name, {required: false}),
+    namePrefix: core.getInput(Inputs.NamePrefix, {required: false}),
     path: core.getInput(Inputs.Path, {required: false}),
     token: core.getInput(Inputs.GitHubToken, {required: false}),
     repository: core.getInput(Inputs.Repository, {required: false}),
@@ -73,7 +74,10 @@ async function run(): Promise<void> {
     artifacts = [targetArtifact]
   } else {
     core.info(
-      `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
+      `No input name specified, downloading all artifacts ${
+        inputs.namePrefix ? `starting with '${inputs.namePrefix}'` : ''
+      }.
+      Extra directory with the artifact name will be created for each download`
     )
 
     const listArtifactResponse = await artifactClient.listArtifacts({
@@ -87,8 +91,20 @@ async function run(): Promise<void> {
       )
     }
 
-    core.debug(`Found ${listArtifactResponse.artifacts.length} artifacts`)
-    artifacts = listArtifactResponse.artifacts
+    if (inputs.namePrefix) {
+      artifacts = listArtifactResponse.artifacts.filter(art =>
+        art.name.startsWith(inputs.namePrefix)
+      )
+
+      if (artifacts.length === 0) {
+        throw new Error(
+          `No artifacts found starting with prefix ${inputs.namePrefix} for run '${inputs.runID}' in '${inputs.repository}'`
+        )
+      }
+    } else {
+      artifacts = listArtifactResponse.artifacts
+    }
+    core.debug(`Found ${artifacts.length} artifacts`)
   }
 
   const downloadPromises = artifacts.map(artifact =>

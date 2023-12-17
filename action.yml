@@ -3,7 +3,11 @@ description: 'Download a build artifact that was previously uploaded in the work
 author: 'GitHub'
 inputs:
   name:
-    description: 'Name of the artifact to download. If unspecified, all artifacts for the run are downloaded'
+    description: 'Name of the artifact to download. If unspecified, all artifacts for the run are downloaded, 
+      unless filtered out by name-prefix.'
+    required: false
+  name-prefix:
+    description: 'Download all artifacts starting with this prefix.'
     required: false
   path:
     description: 'Destination path. Supports basic tilde expansion. Defaults to $GITHUB_WORKSPACE'
