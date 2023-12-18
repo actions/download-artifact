@@ -106,3 +106,25 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
+
+    # Test glob downloading both artifacts to same directory
+    - name: Download all Artifacts
+      uses: ./
+      with:
+        pattern: Artifact-*
+        path: single/directory
+        merge-multiple: true
+
+    - name: Verify successful download
+      run: |
+        $fileA = "single/directory/file-A.txt"
+        $fileB = "single/directory/file-B.txt"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
