@@ -39,6 +39,8 @@ For more information, see the [`@actions/artifact`](https://github.com/actions/t
 1. On self hosted runners, additional [firewall rules](https://github.com/actions/toolkit/tree/main/packages/artifact#breaking-changes) may be required.
 2. Downloading artifacts that were created from `action/upload-artifact@v3` and below are not supported.
 
+For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
+
 ## Usage
 
 ### Inputs
