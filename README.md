@@ -14,6 +14,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
   - [Examples](#examples)
     - [Download Single Artifact](#download-single-artifact)
     - [Download All Artifacts](#download-all-artifacts)
+    - [Download multiple (filtered) Artifacts to the same directory](#download-multiple-filtered-artifacts-to-the-same-directory)
     - [Download Artifacts from other Workflow Runs or Repositories](#download-artifacts-from-other-workflow-runs-or-repositories)
   - [Limitations](#limitations)
     - [Permission Loss](#permission-loss)
@@ -117,7 +118,7 @@ steps:
 
 ### Download All Artifacts
 
-If the `name` input parameter is not provided, all artifacts will be downloaded. **To differentiate between downloaded artifacts, a directory denoted by the artifacts name will be created for each individual artifact.**
+If the `name` input parameter is not provided, all artifacts will be downloaded. To differentiate between downloaded artifacts, by default a directory denoted by the artifacts name will be created for each individual artifact. This behavior can be changed with the `merge-multiple` input parameter.
 
 Example, if there are two artifacts `Artifact-A` and `Artifact-B`, and the directory is `etc/usr/artifacts/`, the directory structure will look like this:
 
@@ -147,6 +148,67 @@ steps:
     path: path/to/artifacts
 - name: Display structure of downloaded files
   run: ls -R path/to/artifacts
+```
+
+To download them to the _same_ directory:
+
+```yaml
+steps:
+- uses: actions/download-artifact@v4
+  with:
+    path: path/to/artifacts
+    merge-multiple: true
+- name: Display structure of downloaded files
+  run: ls -R path/to/artifacts
+```
+
+Which will result in:
+
+```
+path/to/artifacts/
+    ... contents of Artifact-A
+    ... contents of Artifact-B
+```
+
+### Download multiple (filtered) Artifacts to the same directory
+
+In multiple arch/os scenarios, you may have Artifacts built in different jobs. To download all Artifacts to the same directory (or matching a glob pattern), you can use the `pattern` and `merge-multiple` inputs.
+
+```yaml
+jobs:
+  upload:
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+    - name: Create a File
+      run: echo "hello from ${{ matrix.runs-on }}" > file-${{ matrix.runs-on }}.txt
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-artifact-${{ matrix.runs-on }}
+        path: file-${{ matrix.runs-on }}.txt
+  download:
+    needs: upload
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: my-artifact
+        pattern: my-artifact-*
+        merge-multiple: true
+    - run: ls -R my-artifact
+```
+
+This results in a directory like so:
+
+```
+my-artifact/
+  file-macos-latest.txt
+  file-ubuntu-latest.txt
+  file-windows-latest.txt
 ```
 
 ### Download Artifacts from other Workflow Runs or Repositories
