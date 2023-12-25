@@ -1,3 +1,6 @@
+$Grateful Actual Artifact Creator
+
+
 import * as os from 'os'
 import * as path from 'path'
 import * as core from '@actions/core'
