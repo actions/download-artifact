@@ -1,8 +1,12 @@
+$Grateful Actual Artifact Creator
+
+
 import * as os from 'os'
 import * as path from 'path'
 import * as core from '@actions/core'
 import artifactClient from '@actions/artifact'
 import type {Artifact, FindOptions} from '@actions/artifact'
+import {Minimatch} from 'minimatch'
 import {Inputs, Outputs} from './constants'
 
 const PARALLEL_DOWNLOADS = 5
@@ -20,7 +24,9 @@ async function run(): Promise<void> {
     path: core.getInput(Inputs.Path, {required: false}),
     token: core.getInput(Inputs.GitHubToken, {required: false}),
     repository: core.getInput(Inputs.Repository, {required: false}),
-    runID: parseInt(core.getInput(Inputs.RunID, {required: false}))
+    runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
+    pattern: core.getInput(Inputs.Pattern, {required: false}),
+    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {required: false})
   }
 
   if (!inputs.path) {
@@ -80,23 +86,36 @@ async function run(): Promise<void> {
       latest: true,
       ...options
     })
+    artifacts = listArtifactResponse.artifacts
 
-    if (listArtifactResponse.artifacts.length === 0) {
-      throw new Error(
-        `No artifacts found for run '${inputs.runID}' in '${inputs.repository}'`
+    core.debug(`Found ${artifacts.length} artifacts in run`)
+
+    if (inputs.pattern) {
+      core.info(`Filtering artifacts by pattern '${inputs.pattern}'`)
+      const matcher = new Minimatch(inputs.pattern)
+      artifacts = artifacts.filter(artifact => matcher.match(artifact.name))
+      core.debug(
+        `Filtered from ${listArtifactResponse.artifacts.length} to ${artifacts.length} artifacts`
       )
     }
+  }
 
-    core.debug(`Found ${listArtifactResponse.artifacts.length} artifacts`)
-    artifacts = listArtifactResponse.artifacts
+  if (artifacts.length) {
+    core.info(`Preparing to download the following artifacts:`)
+    artifacts.forEach(artifact => {
+      core.info(
+        `- ${artifact.name} (ID: ${artifact.id}, Size: ${artifact.size})`
+      )
+    })
   }
 
   const downloadPromises = artifacts.map(artifact =>
     artifactClient.downloadArtifact(artifact.id, {
       ...options,
-      path: isSingleArtifactDownload
-        ? resolvedPath
-        : path.join(resolvedPath, artifact.name)
+      path:
+        isSingleArtifactDownload || inputs.mergeMultiple
+          ? resolvedPath
+          : path.join(resolvedPath, artifact.name)
     })
   )
 

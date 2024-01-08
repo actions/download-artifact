@@ -48,13 +48,13 @@ jobs:
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
 
     - name: Upload artifact A
-      uses: actions/upload-artifact@v4-beta
+      uses: actions/upload-artifact@v4
       with:
         name: Artifact-A-${{ matrix.runs-on }}
         path: path/to/artifact-A
 
     - name: Upload artifact B
-      uses: actions/upload-artifact@v4-beta
+      uses: actions/upload-artifact@v4
       with:
         name: Artifact-B-${{ matrix.runs-on }}
         path: path/to/artifact-B
@@ -97,6 +97,28 @@ jobs:
       run: |
         $fileA = "some/other/path/Artifact-A-${{ matrix.runs-on }}/file-A.txt"
         $fileB = "some/other/path/Artifact-B-${{ matrix.runs-on }}/file-B.txt"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    # Test glob downloading both artifacts to same directory
+    - name: Download all Artifacts
+      uses: ./
+      with:
+        pattern: Artifact-*
+        path: single/directory
+        merge-multiple: true
+
+    - name: Verify successful download
+      run: |
+        $fileA = "single/directory/file-A.txt"
+        $fileB = "single/directory/file-B.txt"
         if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
         {
             Write-Error "Expected files do not exist"
