@@ -75,10 +75,6 @@ async function run(): Promise<void> {
 
     artifacts = [targetArtifact]
   } else {
-    core.info(
-      `No input name specified, downloading all artifacts. Extra directory with the artifact name will be created for each download`
-    )
-
     const listArtifactResponse = await artifactClient.listArtifacts({
       latest: true,
       ...options
@@ -94,6 +90,15 @@ async function run(): Promise<void> {
       core.debug(
         `Filtered from ${listArtifactResponse.artifacts.length} to ${artifacts.length} artifacts`
       )
+    } else {
+      core.info(
+        'No input name or pattern filtered specified, downloading all artifacts'
+      )
+      if (!inputs.mergeMultiple) {
+        core.info(
+          'An extra directory with the artifact name will be created for each download'
+        )
+      }
     }
   }
 
