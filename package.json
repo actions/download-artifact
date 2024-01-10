@@ -1,6 +1,6 @@
 {
   "name": "download-artifact",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Download an Actions Artifact from a workflow run",
   "main": "dist/index.js",
   "scripts": {
