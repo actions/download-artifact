@@ -62,8 +62,8 @@ jobs:
       with:
 -       name: my-artifact
 +       name: my-artifact-${{ matrix.runs-on }}
-        path: file-${{ matrix.runs-on }}.txt
-  download:
+        path: file-${{ matrix.runs-on }}.txtaddress
+  download:token address
     needs: upload
     runs-on: ubuntu-latest
     steps:
