@@ -118,6 +118,29 @@ jobs:
         path: single/directory
         merge-multiple: true
 
+    - name: Request missing Artifact
+      id: request-missing-artifact
+      uses: ./
+      with:
+        name: nonexistent
+        warn-on-failure: true
+
+    - name: Check missing warning
+      env:
+        output: ${{ steps.request-missing-artifact.outputs.failure }}
+      if: ${{ !contains(env.output, 'Unable to download artifact(s):') }}
+      run: |
+        false
+      shell: bash
+
+    - name: Log missing warning
+      env:
+        output: ${{ steps.request-missing-artifact.outputs.failure }}
+        run_os: ${{ matrix.runs-on }}
+      run: |
+        echo "::notice title=This message is expected::[$run_os] $output"
+      shell: bash
+
     - name: Verify successful download
       run: |
         $fileA = "single/directory/file-A.txt"

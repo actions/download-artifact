@@ -82,6 +82,10 @@ For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
     # If github-token is specified, this is the run that artifacts will be downloaded from.
     # Optional. Default is ${{ github.run_id }}
     run-id:
+
+    # Map failure result to an output instead of failing the job.
+    # Optional. Default is `false`
+    warn-on-failure:
 ```
 
 ### Outputs
@@ -89,6 +93,7 @@ For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
 | Name | Description | Example |
 | - | - | - |
 | `download-path` | Absolute path where the artifact(s) were downloaded | `/tmp/my/download/path` |
+| `failure` | Failure message (if using `warn-on-failure`) | `Unable to download artifact(s): ...` |
 
 ## Examples
 

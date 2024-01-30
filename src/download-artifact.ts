@@ -8,6 +8,10 @@ import {Inputs, Outputs} from './constants'
 
 const PARALLEL_DOWNLOADS = 5
 
+interface Flags {
+  warnOnFailure: boolean
+}
+
 export const chunk = <T>(arr: T[], n: number): T[][] =>
   arr.reduce((acc, cur, i) => {
     const index = Math.floor(i / n)
@@ -15,7 +19,7 @@ export const chunk = <T>(arr: T[], n: number): T[][] =>
     return acc
   }, [] as T[][])
 
-async function run(): Promise<void> {
+async function run(flags: Flags): Promise<void> {
   const inputs = {
     name: core.getInput(Inputs.Name, {required: false}),
     path: core.getInput(Inputs.Path, {required: false}),
@@ -23,8 +27,12 @@ async function run(): Promise<void> {
     repository: core.getInput(Inputs.Repository, {required: false}),
     runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
     pattern: core.getInput(Inputs.Pattern, {required: false}),
-    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {required: false})
+    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {
+      required: false
+    }),
+    warnOnFailure: core.getBooleanInput(Inputs.WarnOnFailure, {required: false})
   }
+  flags.warnOnFailure = inputs.warnOnFailure
 
   if (!inputs.path) {
     inputs.path = process.env['GITHUB_WORKSPACE'] || process.cwd()
@@ -131,6 +139,16 @@ async function run(): Promise<void> {
   core.info('Download artifact has finished successfully')
 }
 
-run().catch(err =>
-  core.setFailed(`Unable to download artifact(s): ${err.message}`)
-)
+{
+  const flags = {warnOnFailure: false}
+  run(flags).catch(err => {
+    if (flags.warnOnFailure) {
+      core.setOutput(
+        'failure',
+        `Unable to download artifact(s): ${err.message}`
+      )
+    } else {
+      core.setFailed(`Unable to download artifact(s): ${err.message}`)
+    }
+  })
+}
