@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  licenses:
     runs-on: ubuntu-latest
     name: Check licenses
     steps:

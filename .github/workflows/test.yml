@@ -8,8 +8,8 @@ on:
       - '**.md'
 
 jobs:
-  build:
-    name: Build
+  test:
+    name: Build and Test
 
     strategy:
       matrix:
