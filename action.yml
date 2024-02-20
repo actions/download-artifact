@@ -17,6 +17,10 @@ inputs:
       If false, the downloaded artifacts will be extracted into individual named directories within the specified path.'
     required: false
     default: 'false'
+  allow-not-found:
+    description: 'If an artifact was not found, do not cause the action to fail.'
+    required: false
+    default: 'false'
   github-token:
     description: 'The GitHub token used to authenticate with the GitHub API.
       This is required when downloading artifacts from a different repository or from a different workflow run.

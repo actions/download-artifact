@@ -23,7 +23,10 @@ async function run(): Promise<void> {
     repository: core.getInput(Inputs.Repository, {required: false}),
     runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
     pattern: core.getInput(Inputs.Pattern, {required: false}),
-    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {required: false})
+    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {
+      required: false
+    }),
+    allowNotFound: core.getBooleanInput(Inputs.AllowNotFound, {required: false})
   }
 
   if (!inputs.path) {
@@ -35,7 +38,7 @@ async function run(): Promise<void> {
   }
 
   const isSingleArtifactDownload = !!inputs.name
-  const resolvedPath = path.resolve(inputs.path)
+  let resolvedPath = path.resolve(inputs.path)
   core.debug(`Resolved path is ${resolvedPath}`)
 
   const options: FindOptions = {}
@@ -60,20 +63,25 @@ async function run(): Promise<void> {
   if (isSingleArtifactDownload) {
     core.info(`Downloading single artifact`)
 
-    const {artifact: targetArtifact} = await artifactClient.getArtifact(
-      inputs.name,
-      options
-    )
+    const targetArtifact = await artifactClient
+      .getArtifact(inputs.name, options)
+      .catch(() => null)
 
     if (!targetArtifact) {
-      throw new Error(`Artifact '${inputs.name}' not found`)
+      const message = `Artifact '${inputs.name}' not found`
+      if (!inputs.allowNotFound) {
+        throw new Error(message)
+      } else {
+        core.warning(message)
+        resolvedPath = ''
+      }
+    } else {
+      core.debug(
+        `Found named artifact '${inputs.name}' (ID: ${targetArtifact.artifact.id}, Size: ${targetArtifact.artifact.size})`
+      )
+
+      artifacts = [targetArtifact.artifact]
     }
-
-    core.debug(
-      `Found named artifact '${inputs.name}' (ID: ${targetArtifact.id}, Size: ${targetArtifact.size})`
-    )
-
-    artifacts = [targetArtifact]
   } else {
     const listArtifactResponse = await artifactClient.listArtifacts({
       latest: true,
