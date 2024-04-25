@@ -32,9 +32,15 @@ inputs:
       If github-token is specified, this is the run that artifacts will be downloaded from.'
     required: false
     default: ${{ github.run_id }}
+  warn-on-failure:
+    description: 'Map failure result to an output instead of failing the job'
+    required: false
+    default: false
 outputs:
   download-path:
     description: 'Path of artifact download'
+  failure:
+    description: 'Failure message (if warn-on-failure is set)'
 runs:
   using: 'node20'
   main: 'dist/index.js'
