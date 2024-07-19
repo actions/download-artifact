@@ -21,6 +21,7 @@ async function run(): Promise<void> {
     path: core.getInput(Inputs.Path, {required: false}),
     token: core.getInput(Inputs.GitHubToken, {required: false}),
     repository: core.getInput(Inputs.Repository, {required: false}),
+    maxAttempts: core.getInput(constants_1.Inputs.MaxAttempts, { required: false }),
     runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
     pattern: core.getInput(Inputs.Pattern, {required: false}),
     mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {required: false})
@@ -53,6 +54,14 @@ async function run(): Promise<void> {
       repositoryName,
       repositoryOwner
     }
+  }
+
+  if (inputs.maxAttempts) {
+      core.info(`Max attempts for retrying download: ${inputs.maxAttempts}`);
+      options.findBy["maxAttempts"] = inputs.maxAttempts;
+  }
+  else {
+      throw new Error(`Invalid retryCount: '${inputs.maxAttempts}'. Must be greater than 0`);
   }
 
   let artifacts: Artifact[] = []
