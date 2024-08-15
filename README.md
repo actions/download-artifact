@@ -233,6 +233,43 @@ steps:
     run-id: 1234
 ```
 
+## Waiting for the artifact to be available
+
+You can specify `wait-timeout` (seconds) to instruct the download-artifact action to retry until the artifact is available.
+This is useful if you want to launch the job before its dependency job has finished, e.g. if the dependant requires some time-consuming steps.
+You can do this by removing the `needs` dependency and relying on the retry logic of download-artifact to fetch the artifact after it's uploaded.
+
+Beware that GitHub actions come with a limited number of runners available, so if your workflow uses up the limt on the "dependant" jobs,
+your artifact-source jobs may never be scheduled.
+
+```yaml
+jobs:
+  producer-job:
+    name: This job produces an artifact
+    steps:
+      # ... do something
+
+      # ... then upload an artifact as usual
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-name
+          path: path/to/artifact
+
+  dependant-job:
+    name: This job has some long running preparation that can run before the artifact is necessary
+    steps:
+      # your long-running steps come first - they're run in parallel with the `producer-job` above (given you have enouth GH actions runners available)
+      run: # e.g. install some large SDK
+
+      # then when you finally need the artifact to be downloaded
+      uses: actions/download-artifact@v4
+      with:
+        name: artifact-name
+        path: output-path
+        # wait for 300 seconds
+        wait-timeout: 300
+```
+
 ## Limitations
 
 ### Permission Loss

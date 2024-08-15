@@ -5,7 +5,8 @@ export enum Inputs {
   Repository = 'repository',
   RunID = 'run-id',
   Pattern = 'pattern',
-  MergeMultiple = 'merge-multiple'
+  MergeMultiple = 'merge-multiple',
+  WaitTimeout = 'wait-timeout'
 }
 
 export enum Outputs {
