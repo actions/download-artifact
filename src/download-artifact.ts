@@ -111,7 +111,7 @@ async function run(): Promise<void> {
     })
   }
 
-  const downloadPromises = artifacts.map(artifact =>
+  const downloadPromises = artifacts.map(artifact => () =>
     artifactClient.downloadArtifact(artifact.id, {
       ...options,
       path:
@@ -123,7 +123,7 @@ async function run(): Promise<void> {
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
   for (const chunk of chunkedPromises) {
-    await Promise.all(chunk)
+    await Promise.all(chunk.map(fn => fn()))
   }
 
   core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
