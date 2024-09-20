@@ -9,5 +9,6 @@ export enum Inputs {
 }
 
 export enum Outputs {
-  DownloadPath = 'download-path'
+  DownloadPath = 'download-path',
+  Artifacts = 'artifacts',
 }
