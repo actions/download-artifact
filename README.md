@@ -1,4 +1,4 @@
-# `@actions/download-artifact`
+@actions/~/download-artifact`
 
 > [!WARNING]
 > actions/download-artifact@v3 is scheduled for deprecation on **November 30, 2024**. [Learn more.](https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/)
