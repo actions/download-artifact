@@ -86,6 +86,7 @@ For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
 
     # The id of the workflow run where the desired download artifact was uploaded from.
     # If github-token is specified, this is the run that artifacts will be downloaded from.
+    # If your current workflow runs after another (triggered by `workflow_run`), you can specify the `run-id` to `${{ github.event.workflow_run.id }}`
     # Optional. Default is ${{ github.run_id }}
     run-id:
 ```
@@ -231,6 +232,24 @@ steps:
     github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
     repository: actions/toolkit
     run-id: 1234
+```
+
+Also, a common use case is to download artifacts from the previously completed workflow, then you can specify the `run-id` to `${{GitHub.event.workflow_run.id }}`:
+
+```yaml
+on:
+  workflow_run:
+    workflows: [ "The name of the previous workflow" ]
+    types:
+      - completed
+
+steps:
+- uses: actions/download-artifact@v4
+  with:
+    name: my-other-artifact
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    repository: actions/toolkit
+    run-id: ${{ github.event.workflow_run.id }}
 ```
 
 ## Limitations
