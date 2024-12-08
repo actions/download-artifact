@@ -128,3 +128,15 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
+
+    - name: Download non-existent Artifact
+      id: not-existent-artifact
+      uses: ./
+      with:
+        name: Artifact-C-${{ matrix.runs-on }}
+        allow-not-found: true
+
+    - name: Verify empty download-path output
+      if: ${{ steps.not-existent-artifact.outputs.download-path != '' }}
+      run: |
+        Write-Error "Expected download-path output is not empty"
