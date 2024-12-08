@@ -88,6 +88,12 @@ For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
     # If github-token is specified, this is the run that artifacts will be downloaded from.
     # Optional. Default is ${{ github.run_id }}
     run-id:
+
+    # When an artifact was not found, this changes the behavior of the download-artifact action.
+    # If true, this will not cause the action to fail. Instead, the 'download-path' output will be empty.
+    # If false, this action will raise an error and quit.
+    # Optional. Default is 'false'.
+    allow-not-found:
 ```
 
 ### Outputs
