@@ -206,4 +206,4 @@ jobs:
 +         pattern: my-artifact-*
 ```
 
-Note that this will download all artifacts to a temporary directory and reupload them as a single artifact. For more information on inputs and other use cases for `actions/upload-artifact/merge@v4`, see [the action documentation](../merge/README.md).
+Note that this will download all artifacts to a temporary directory and reupload them as a single artifact. For more information on inputs and other use cases for `actions/upload-artifact/merge@v4`, see [the action documentation](https://github.com/actions/upload-artifact/blob/main/merge/README.md).
