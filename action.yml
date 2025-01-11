@@ -35,6 +35,8 @@ inputs:
 outputs:
   download-path:
     description: 'Path of artifact download'
+  artifacts:
+    description: downloaded artifacts json array string
 runs:
   using: 'node20'
   main: 'dist/index.js'
