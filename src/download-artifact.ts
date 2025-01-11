@@ -23,6 +23,7 @@ async function run(): Promise<void> {
     repository: core.getInput(Inputs.Repository, {required: false}),
     runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
     pattern: core.getInput(Inputs.Pattern, {required: false}),
+    waitTimeout: core.getInput(Inputs.WaitTimeout, {required: false}),
     mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {required: false})
   }
 
@@ -60,10 +61,35 @@ async function run(): Promise<void> {
   if (isSingleArtifactDownload) {
     core.info(`Downloading single artifact`)
 
-    const {artifact: targetArtifact} = await artifactClient.getArtifact(
-      inputs.name,
-      options
-    )
+    const downloadFn = () => artifactClient.getArtifact(inputs.name, options)
+
+    const waitAndDownload = async <T>(action: () => T) => {
+      const waitUntil = Date.now() + parseInt(inputs.waitTimeout) * 1000
+      let lastError
+      do {
+        try {
+          return await action()
+        } catch (e) {
+          lastError = e
+          core.info(
+            'Waiting for the artifact to become available... ' +
+              `Remaining time until timeout: ${Math.max(
+                0,
+                Math.floor((waitUntil - Date.now()) / 1000)
+              )} seconds`
+          )
+          await new Promise(f => setTimeout(f, 10000))
+        }
+      } while (Date.now() < waitUntil)
+      throw Error(
+        'Waiting for the artifact has timed out. Latest error was: ' + lastError
+      )
+    }
+
+    const {artifact: targetArtifact} =
+      inputs.waitTimeout === ''
+        ? await downloadFn()
+        : await waitAndDownload(() => downloadFn())
 
     if (!targetArtifact) {
       throw new Error(`Artifact '${inputs.name}' not found`)
@@ -75,6 +101,12 @@ async function run(): Promise<void> {
 
     artifacts = [targetArtifact]
   } else {
+    if (inputs.waitTimeout !== '') {
+      core.warning(
+        `Waiting for multiple artifact (i.e. specifying non-zero wait-timeout: '${inputs.waitTimeout}') is not supported.`
+      )
+    }
+
     const listArtifactResponse = await artifactClient.listArtifacts({
       latest: true,
       ...options

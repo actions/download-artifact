@@ -32,6 +32,9 @@ inputs:
       If github-token is specified, this is the run that artifacts will be downloaded from.'
     required: false
     default: ${{ github.run_id }}
+  wait-timeout:
+    description: 'Wait for the artifact to become available (timeout in seconds)'
+    required: false
 outputs:
   download-path:
     description: 'Path of artifact download'
