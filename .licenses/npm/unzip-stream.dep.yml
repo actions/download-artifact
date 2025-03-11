@@ -1,9 +1,9 @@
 ---
 name: unzip-stream
-version: 0.3.1
+version: 0.3.4
 type: npm
 summary: Process zip files using streaming API
-homepage:
+homepage: 
 license: mit
 licenses:
 - sources: LICENSE
