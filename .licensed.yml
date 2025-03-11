@@ -12,4 +12,10 @@ allowed:
 
 reviewed:
   npm:
+  - chainsaw
   - fs.realpath
+  - jackspeak
+  - path-scurry
+  - readable-stream
+  - string_decoder
+  - tslib
