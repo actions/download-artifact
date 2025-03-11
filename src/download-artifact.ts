@@ -108,8 +108,10 @@ async function run(): Promise<void> {
       core.info(
         `- ${artifact.name} (ID: ${artifact.id}, Size: ${artifact.size})`
       )
+      core.info(`Artifact digest: ${artifact.digest}`)
     })
   }
+
 
   const downloadPromises = artifacts.map(artifact =>
     artifactClient.downloadArtifact(artifact.id, {
@@ -129,6 +131,7 @@ async function run(): Promise<void> {
 
   for (const dlPromise of downloadPromises) {
     const outcome = await dlPromise
+    core.info(`digest mismatch: ${outcome.digestMismatch}`)
     if (!outcome.digestMismatch) {
       core.warning(
         `Artifact digest validation failed. Please verify the integrity of the artifact.`
