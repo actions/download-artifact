@@ -129,7 +129,7 @@ async function run(): Promise<void> {
 
   for (const dlPromise of downloadPromises) {
     const outcome = await dlPromise
-    if (!outcome.digestMismatch) {
+    if (outcome.digestMismatch) {
       core.warning(
         `Artifact digest validation failed. Please verify the integrity of the artifact.`
       )
