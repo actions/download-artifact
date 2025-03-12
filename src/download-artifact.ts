@@ -111,8 +111,9 @@ async function run(): Promise<void> {
     })
   }
 
-  const downloadPromises = artifacts.map(artifact =>
-    artifactClient.downloadArtifact(artifact.id, {
+  const downloadPromises = artifacts.map(artifact => ({
+    name: artifact.name,
+    promise: artifactClient.downloadArtifact(artifact.id, {
       ...options,
       path:
         isSingleArtifactDownload || inputs.mergeMultiple
@@ -120,23 +121,28 @@ async function run(): Promise<void> {
           : path.join(resolvedPath, artifact.name),
       expectedHash: artifact.digest
     })
-  )
+  }))
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
   for (const chunk of chunkedPromises) {
-    const result = await Promise.all(chunk)
-    for (const outcome of result) {
-      if (outcome.digestMismatch) {
+    const chunkPromises = chunk.map(item => item.promise)
+    const results = await Promise.all(chunkPromises)
+
+    for (let i = 0; i < results.length; i++) {
+      const outcome = results[i]
+      const artifactName = chunk[i].name
+
+      if (!outcome.digestMismatch) {
         core.warning(
-          `Artifact digest validation failed. Please verify the integrity of the artifact.`
+          `Artifact '${artifactName}' digest validation failed. Please verify the integrity of the artifact.`
         )
       }
     }
-  }
 
-  core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
-  core.setOutput(Outputs.DownloadPath, resolvedPath)
-  core.info('Download artifact has finished successfully')
+    core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
+    core.setOutput(Outputs.DownloadPath, resolvedPath)
+    core.info('Download artifact has finished successfully')
+  }
 }
 
 run().catch(err =>
