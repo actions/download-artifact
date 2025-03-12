@@ -106,7 +106,7 @@ async function run(): Promise<void> {
     core.info(`Preparing to download the following artifacts:`)
     artifacts.forEach(artifact => {
       core.info(
-        `- ${artifact.name} (ID: ${artifact.id}, Size: ${artifact.size})`
+        `- ${artifact.name} (ID: ${artifact.id}, Size: ${artifact.size}, Expected Digest: ${artifact.digest})`
       )
     })
   }
@@ -132,7 +132,7 @@ async function run(): Promise<void> {
       const outcome = results[i]
       const artifactName = chunk[i].name
 
-      if (outcome.digestMismatch) {
+      if (!outcome.digestMismatch) {
         core.warning(
           `Artifact '${artifactName}' digest validation failed. Please verify the integrity of the artifact.`
         )
