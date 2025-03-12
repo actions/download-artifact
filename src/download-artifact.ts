@@ -117,13 +117,23 @@ async function run(): Promise<void> {
       path:
         isSingleArtifactDownload || inputs.mergeMultiple
           ? resolvedPath
-          : path.join(resolvedPath, artifact.name)
+          : path.join(resolvedPath, artifact.name),
+      expectedHash: artifact.digest
     })
   )
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
   for (const chunk of chunkedPromises) {
     await Promise.all(chunk)
+  }
+
+  for (const dlPromise of downloadPromises) {
+    const outcome = await dlPromise
+    if (outcome.digestMismatch) {
+      core.warning(
+        `Artifact digest validation failed. Please verify the integrity of the artifact.`
+      )
+    }
   }
 
   core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
