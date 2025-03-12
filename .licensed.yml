@@ -15,6 +15,7 @@ reviewed:
   - chainsaw
   - fs.realpath
   - jackspeak
+  - minimatch
   - path-scurry
   - readable-stream
   - string_decoder
