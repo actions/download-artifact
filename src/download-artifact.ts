@@ -132,7 +132,7 @@ async function run(): Promise<void> {
       const outcome = results[i]
       const artifactName = chunk[i].name
 
-      if (!outcome.digestMismatch) {
+      if (outcome.digestMismatch) {
         core.warning(
           `Artifact '${artifactName}' digest validation failed. Please verify the integrity of the artifact.`
         )
