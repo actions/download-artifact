@@ -124,15 +124,13 @@ async function run(): Promise<void> {
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
   for (const chunk of chunkedPromises) {
-    await Promise.all(chunk)
-  }
-
-  for (const dlPromise of downloadPromises) {
-    const outcome = await dlPromise
-    if (outcome.digestMismatch) {
-      core.warning(
-        `Artifact digest validation failed. Please verify the integrity of the artifact.`
-      )
+    const result = await Promise.all(chunk)
+    for (const outcome of result) {
+      if (outcome.digestMismatch) {
+        core.warning(
+          `Artifact digest validation failed. Please verify the integrity of the artifact.`
+        )
+      }
     }
   }
 
