@@ -1,4 +1,4 @@
-# `@actions/download-artifact`
+@actions/~/download-artifact`
 
 Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts) from your Workflow Runs. Internally powered by the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) package.
 
