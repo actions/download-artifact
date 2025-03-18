@@ -138,11 +138,10 @@ async function run(): Promise<void> {
         )
       }
     }
-
-    core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
-    core.setOutput(Outputs.DownloadPath, resolvedPath)
-    core.info('Download artifact has finished successfully')
   }
+  core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
+  core.setOutput(Outputs.DownloadPath, resolvedPath)
+  core.info('Download artifact has finished successfully')
 }
 
 run().catch(err =>
