@@ -9,5 +9,5 @@
     "moduleResolution": "node",
     "esModuleInterop": true
   },
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "exclude": ["node_modules", "**/*.test.ts", "jest.config.ts", "__tests__"]
 }
