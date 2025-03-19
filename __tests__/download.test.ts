@@ -76,7 +76,7 @@ describe('download', () => {
       })
     )
     expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
-    
+
     expect(core.setOutput).toHaveBeenCalledWith(
       'download-path',
       expect.any(String)
