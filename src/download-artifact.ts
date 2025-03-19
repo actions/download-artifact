@@ -15,7 +15,7 @@ export const chunk = <T>(arr: T[], n: number): T[][] =>
     return acc
   }, [] as T[][])
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   const inputs = {
     name: core.getInput(Inputs.Name, {required: false}),
     path: core.getInput(Inputs.Path, {required: false}),
@@ -138,7 +138,6 @@ async function run(): Promise<void> {
         )
       }
     }
-
     core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
     core.setOutput(Outputs.DownloadPath, resolvedPath)
     core.info('Download artifact has finished successfully')
