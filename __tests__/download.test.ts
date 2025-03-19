@@ -76,6 +76,15 @@ describe('download', () => {
       })
     )
     expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+    
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'download-path',
+      expect.any(String)
+    )
+
+    expect(core.info).toHaveBeenCalledWith(
+      'Download artifact has finished successfully'
+    )
   })
 
   test('downloads multiple artifacts when no name or pattern provided', async () => {
