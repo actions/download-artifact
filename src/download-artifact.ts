@@ -111,22 +111,20 @@ export async function run(): Promise<void> {
     })
   }
 
-  const downloadPromises = artifacts.map(artifact => ({
-    name: artifact.name,
-    promise: artifactClient.downloadArtifact(artifact.id, {
-      ...options,
-      path:
-        isSingleArtifactDownload || inputs.mergeMultiple
-          ? resolvedPath
-          : path.join(resolvedPath, artifact.name),
-      expectedHash: artifact.digest
-    })
-  }))
-
-  const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
-  for (const chunk of chunkedPromises) {
-    const chunkPromises = chunk.map(item => item.promise)
-    const results = await Promise.all(chunkPromises)
+  const chunkedArtifacts = chunk(artifacts, PARALLEL_DOWNLOADS)
+  for (const chunk of chunkedArtifacts) {
+    const chunkPromises = chunk.map(artifact => ({
+      name: artifact.name,
+      promise: artifactClient.downloadArtifact(artifact.id, {
+        ...options,
+        path:
+          isSingleArtifactDownload || inputs.mergeMultiple
+            ? resolvedPath
+            : path.join(resolvedPath, artifact.name),
+        expectedHash: artifact.digest
+      })
+    }))
+    const results = await Promise.all(chunkPromises.map(item => item.promise))
 
     for (let i = 0; i < results.length; i++) {
       const outcome = results[i]
