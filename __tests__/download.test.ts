@@ -112,7 +112,7 @@ describe('download', () => {
     await run()
 
     expect(core.info).toHaveBeenCalledWith(
-      'No input name or pattern filtered specified, downloading all artifacts'
+      'No input name, artifact-ids or pattern filtered specified, downloading all artifacts'
     )
 
     expect(core.info).toHaveBeenCalledWith('Total of 2 artifact(s) downloaded')

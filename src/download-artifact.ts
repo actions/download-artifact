@@ -23,7 +23,10 @@ export async function run(): Promise<void> {
     repository: core.getInput(Inputs.Repository, {required: false}),
     runID: parseInt(core.getInput(Inputs.RunID, {required: false})),
     pattern: core.getInput(Inputs.Pattern, {required: false}),
-    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {required: false})
+    mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {
+      required: false
+    }),
+    artifactIds: core.getInput(Inputs.ArtifactIds, {required: false})
   }
 
   if (!inputs.path) {
@@ -34,7 +37,15 @@ export async function run(): Promise<void> {
     inputs.path = inputs.path.replace('~', os.homedir())
   }
 
+  // Check for mutually exclusive inputs
+  if (inputs.name && inputs.artifactIds) {
+    throw new Error(
+      `Inputs 'name' and 'artifact-ids' cannot be used together. Please specify only one.`
+    )
+  }
+
   const isSingleArtifactDownload = !!inputs.name
+  const isDownloadByIds = !!inputs.artifactIds
   const resolvedPath = path.resolve(inputs.path)
   core.debug(`Resolved path is ${resolvedPath}`)
 
@@ -56,6 +67,7 @@ export async function run(): Promise<void> {
   }
 
   let artifacts: Artifact[] = []
+  let artifactIds: number[] = []
 
   if (isSingleArtifactDownload) {
     core.info(`Downloading single artifact`)
@@ -74,6 +86,52 @@ export async function run(): Promise<void> {
     )
 
     artifacts = [targetArtifact]
+  } else if (isDownloadByIds) {
+    core.info(`Downloading artifacts by ID`)
+
+    const artifactIdList = inputs.artifactIds
+      .split(',')
+      .map(id => id.trim())
+      .filter(id => id !== '')
+
+    if (artifactIdList.length === 0) {
+      throw new Error(`No valid artifact IDs provided in 'artifact-ids' input`)
+    }
+
+    core.debug(`Parsed artifact IDs: ${JSON.stringify(artifactIdList)}`)
+
+    // Parse the artifact IDs
+    artifactIds = artifactIdList.map(id => {
+      const numericId = parseInt(id)
+      if (isNaN(numericId)) {
+        throw new Error(`Invalid artifact ID: '${id}'. Must be a number.`)
+      }
+      return numericId
+    })
+
+    // We need to fetch all artifacts to get metadata for the specified IDs
+    const listArtifactResponse = await artifactClient.listArtifacts({
+      latest: true,
+      ...options
+    })
+
+    artifacts = listArtifactResponse.artifacts.filter(artifact =>
+      artifactIds.includes(artifact.id)
+    )
+
+    if (artifacts.length === 0) {
+      throw new Error(`None of the provided artifact IDs were found`)
+    }
+
+    if (artifacts.length < artifactIds.length) {
+      const foundIds = artifacts.map(a => a.id)
+      const missingIds = artifactIds.filter(id => !foundIds.includes(id))
+      core.warning(
+        `Could not find the following artifact IDs: ${missingIds.join(', ')}`
+      )
+    }
+
+    core.debug(`Found ${artifacts.length} artifacts by ID`)
   } else {
     const listArtifactResponse = await artifactClient.listArtifacts({
       latest: true,
@@ -92,7 +150,7 @@ export async function run(): Promise<void> {
       )
     } else {
       core.info(
-        'No input name or pattern filtered specified, downloading all artifacts'
+        'No input name, artifact-ids or pattern filtered specified, downloading all artifacts'
       )
       if (!inputs.mergeMultiple) {
         core.info(
