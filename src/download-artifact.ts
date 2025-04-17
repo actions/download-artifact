@@ -102,7 +102,7 @@ export async function run(): Promise<void> {
 
     // Parse the artifact IDs
     artifactIds = artifactIdList.map(id => {
-      const numericId = parseInt(id)
+      const numericId = parseInt(id, 10)
       if (isNaN(numericId)) {
         throw new Error(`Invalid artifact ID: '${id}'. Must be a number.`)
       }
