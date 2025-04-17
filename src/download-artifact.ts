@@ -109,42 +109,15 @@ export async function run(): Promise<void> {
       return numericId
     })
 
-    // if the length of artifactIds exactly 1 fetch the latest artifact by its name and check the ID
-    if (artifactIds.length === 1) {
-      core.debug(
-        `Only one artifact ID provided. Fetching latest artifact by its name and checking the ID`
-      )
-      const {artifact: targetArtifact} = await artifactClient.getArtifact(
-        inputs.name,
-        options
-      )
+    // We need to fetch all artifacts to get metadata for the specified IDs
+    const listArtifactResponse = await artifactClient.listArtifacts({
+      latest: true,
+      ...options
+    })
 
-      if (!targetArtifact) {
-        throw new Error(
-          `Artifact with ID '${artifactIds[0]}' not found. Please check the ID.`
-        )
-      }
-
-      core.debug(
-        `Found artifact by ID '${targetArtifact.name}' (ID: ${targetArtifact.id}, Size: ${targetArtifact.size})`
-      )
-
-      artifacts = [targetArtifact]
-    } else {
-      core.info(
-        `Multiple artifact IDs provided. Fetching all artifacts to filter by ID`
-      )
-
-      // We need to fetch all artifacts to get metadata for the specified IDs
-      const listArtifactResponse = await artifactClient.listArtifacts({
-        latest: true,
-        ...options
-      })
-
-      artifacts = listArtifactResponse.artifacts.filter(artifact =>
-        artifactIds.includes(artifact.id)
-      )
-    }
+    artifacts = listArtifactResponse.artifacts.filter(artifact =>
+      artifactIds.includes(artifact.id)
+    )
 
     if (artifacts.length === 0) {
       throw new Error(`None of the provided artifact IDs were found`)
