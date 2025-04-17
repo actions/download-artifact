@@ -25,6 +25,8 @@ const mockInputs = (overrides?: Partial<{[K in Inputs]?: any}>) => {
     [Inputs.Repository]: 'owner/some-repository',
     [Inputs.RunID]: 'some-run-id',
     [Inputs.Pattern]: 'some-pattern',
+    [Inputs.MergeMultiple]: false,
+    [Inputs.ArtifactIds]: '',
     ...overrides
   }
 
@@ -219,6 +221,166 @@ describe('download', () => {
 
     expect(core.warning).toHaveBeenCalledWith(
       expect.stringContaining('digest validation failed')
+    )
+  })
+
+  test('throws error when both name and artifact-ids are provided', async () => {
+    mockInputs({
+      [Inputs.Name]: 'artifact-name',
+      [Inputs.ArtifactIds]: '123'
+    })
+
+    await expect(run()).rejects.toThrow(
+      "Inputs 'name' and 'artifact-ids' cannot be used together. Please specify only one."
+    )
+  })
+
+  test('throws error when artifact-ids is empty', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '  , '
+    })
+
+    await expect(run()).rejects.toThrow(
+      "No valid artifact IDs provided in 'artifact-ids' input"
+    )
+  })
+
+  test('throws error when artifact-id is not a number', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '123,abc,456'
+    })
+
+    await expect(run()).rejects.toThrow(
+      "Invalid artifact ID: 'abc'. Must be a number."
+    )
+  })
+
+  test('downloads a single artifact by ID', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'artifact-by-id',
+      size: 1024,
+      digest: 'def456'
+    }
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '123'
+    })
+
+    jest
+      .spyOn(artifact, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    await run()
+
+    expect(core.debug).toHaveBeenCalledWith(
+      'Only one artifact ID provided. Fetching latest artifact by its name and checking the ID'
+    )
+    expect(artifact.getArtifact).toHaveBeenCalled()
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      mockArtifact.id,
+      expect.objectContaining({
+        expectedHash: mockArtifact.digest
+      })
+    )
+    expect(artifact.listArtifacts).not.toHaveBeenCalled()
+    expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+  })
+
+  test('throws error when single artifact ID is not found', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '999'
+    })
+
+    jest.spyOn(artifact, 'getArtifact').mockImplementation(() => {
+      return Promise.resolve({artifact: null} as any)
+    })
+
+    await expect(run()).rejects.toThrow(
+      "Artifact with ID '999' not found. Please check the ID."
+    )
+  })
+
+  test('downloads multiple artifacts by IDs', async () => {
+    const mockArtifacts = [
+      {id: 123, name: 'artifact1', size: 1024, digest: 'abc123'},
+      {id: 456, name: 'artifact2', size: 2048, digest: 'def456'},
+      {id: 789, name: 'artifact3', size: 3072, digest: 'ghi789'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '123, 456'
+    })
+
+    jest
+      .spyOn(artifact, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    await run()
+
+    expect(core.info).toHaveBeenCalledWith(
+      'Multiple artifact IDs provided. Fetching all artifacts to filter by ID'
+    )
+    expect(artifact.getArtifact).not.toHaveBeenCalled()
+    expect(artifact.listArtifacts).toHaveBeenCalled()
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(2)
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      123,
+      expect.anything()
+    )
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.anything()
+    )
+  })
+
+  test('warns when some artifact IDs are not found', async () => {
+    const mockArtifacts = [
+      {id: 123, name: 'artifact1', size: 1024, digest: 'abc123'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '123, 456, 789'
+    })
+
+    jest
+      .spyOn(artifact, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    await run()
+
+    expect(core.warning).toHaveBeenCalledWith(
+      'Could not find the following artifact IDs: 456, 789'
+    )
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      123,
+      expect.anything()
+    )
+  })
+
+  test('throws error when none of the provided artifact IDs are found', async () => {
+    const mockArtifacts = [
+      {id: 999, name: 'other-artifact', size: 1024, digest: 'xyz999'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.ArtifactIds]: '123, 456'
+    })
+
+    jest
+      .spyOn(artifact, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    await expect(run()).rejects.toThrow(
+      'None of the provided artifact IDs were found'
     )
   })
 })
