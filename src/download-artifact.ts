@@ -114,24 +114,22 @@ export async function run(): Promise<void> {
       core.debug(
         `Only one artifact ID provided. Fetching latest artifact by its name and checking the ID`
       )
-      const getArtifactResponse = await artifactClient.getArtifact(
+      const {artifact: targetArtifact} = await artifactClient.getArtifact(
         inputs.name,
-        {...options}
+        options
       )
 
-      if (!getArtifactResponse || !getArtifactResponse.artifact) {
+      if (!targetArtifact) {
         throw new Error(
           `Artifact with ID '${artifactIds[0]}' not found. Please check the ID.`
         )
       }
 
-      const artifact = getArtifactResponse.artifact
-
       core.debug(
-        `Found artifact by ID '${artifact.name}' (ID: ${artifact.id}, Size: ${artifact.size})`
+        `Found artifact by ID '${targetArtifact.name}' (ID: ${targetArtifact.id}, Size: ${targetArtifact.size})`
       )
 
-      artifacts = [artifact]
+      artifacts = [targetArtifact]
     } else {
       core.info(
         `Multiple artifact IDs provided. Fetching all artifacts to filter by ID`
