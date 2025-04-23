@@ -219,21 +219,29 @@ To take advantage of this immutability for security purposes (to avoid potential
 jobs:
   upload:
     runs-on: ubuntu-latest
+
+    # Make the artifact ID available to the download job
+    outputs:
+      artifact-id: ${{ steps.upload-step.outputs.artifact-id }}
+
     steps:
       - name: Create a file
         run: echo "hello world" > my-file.txt
       - name: Upload Artifact
-        id: upload
+        id: upload-step
         uses: actions/upload-artifact@v4
         with:
           name: my-artifact
           path: my-file.txt
       # The upload step outputs the artifact ID
       - name: Print Artifact ID
-        run: echo "Artifact ID is ${{ steps.upload.outputs.artifact-id }}"
+        run: echo "Artifact ID is ${{ steps.upload-step.outputs.artifact-id }}"
+
   download:
     needs: upload
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Download Artifact by ID
         uses: actions/download-artifact@v4
