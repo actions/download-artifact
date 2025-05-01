@@ -4,6 +4,7 @@
   - [Multiple uploads to the same named Artifact](#multiple-uploads-to-the-same-named-artifact)
   - [Overwriting an Artifact](#overwriting-an-artifact)
   - [Merging multiple artifacts](#merging-multiple-artifacts)
+  - [Working with Immutable Artifacts](#working-with-immutable-artifacts)
 
 Several behavioral differences exist between Artifact actions `v3` and below vs `v4`. This document outlines common scenarios in `v3`, and how they would be handled in `v4`.
 
@@ -207,3 +208,46 @@ jobs:
 ```
 
 Note that this will download all artifacts to a temporary directory and reupload them as a single artifact. For more information on inputs and other use cases for `actions/upload-artifact/merge@v4`, see [the action documentation](https://github.com/actions/upload-artifact/blob/main/merge/README.md).
+
+## Working with Immutable Artifacts
+
+In `v4`, artifacts are immutable by default and each artifact gets a unique ID when uploaded. When an artifact with the same name is uploaded again (with or without `overwrite: true`), it gets a new artifact ID.
+
+To take advantage of this immutability for security purposes (to avoid potential TOCTOU issues where an artifact might be replaced between upload and download), the new `artifact-ids` input allows you to download artifacts by their specific ID rather than by name:
+
+```yaml
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    # Make the artifact ID available to the download job
+    outputs:
+      artifact-id: ${{ steps.upload-step.outputs.artifact-id }}
+
+    steps:
+      - name: Create a file
+        run: echo "hello world" > my-file.txt
+      - name: Upload Artifact
+        id: upload-step
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-artifact
+          path: my-file.txt
+      # The upload step outputs the artifact ID
+      - name: Print Artifact ID
+        run: echo "Artifact ID is ${{ steps.upload-step.outputs.artifact-id }}"
+
+  download:
+    needs: upload
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Artifact by ID
+        uses: actions/download-artifact@v4
+        with:
+          # Use the artifact ID directly, not the name, to ensure you get exactly the artifact you expect
+          artifact-ids: ${{ needs.upload.outputs.artifact-id }}
+```
+
+This approach provides stronger guarantees about which artifact version you're downloading compared to using just the artifact name.
