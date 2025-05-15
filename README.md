@@ -1,11 +1,5 @@
 # `@actions/download-artifact`
 
-> [!WARNING]
-> actions/download-artifact@v3 is scheduled for deprecation on **November 30, 2024**. [Learn more.](https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/)
-> Similarly, v1/v2 are scheduled for deprecation on **June 30, 2024**.
-> Please update your workflow to use v4 of the artifact actions.
-> This deprecation will not impact any existing versions of GitHub Enterprise Server being used by customers.
-
 Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts) from your Workflow Runs. Internally powered by the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) package.
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
@@ -19,6 +13,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
     - [Outputs](#outputs)
   - [Examples](#examples)
     - [Download Single Artifact](#download-single-artifact)
+    - [Download Artifacts by ID](#download-artifacts-by-id)
     - [Download All Artifacts](#download-all-artifacts)
     - [Download multiple (filtered) Artifacts to the same directory](#download-multiple-filtered-artifacts-to-the-same-directory)
     - [Download Artifacts from other Workflow Runs or Repositories](#download-artifacts-from-other-workflow-runs-or-repositories)
@@ -58,6 +53,11 @@ For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
     # If unspecified, all artifacts for the run are downloaded.
     # Optional.
     name:
+
+    # IDs of the artifacts to download, comma-separated.
+    # Either inputs `artifact-ids` or `name` can be used, but not both.
+    # Optional.
+    artifact-ids:
 
     # Destination path. Supports basic tilde expansion.
     # Optional. Default is $GITHUB_WORKSPACE
@@ -123,6 +123,32 @@ steps:
   run: ls -R your/destination/dir
 ```
 
+### Download Artifacts by ID
+
+The `artifact-ids` input allows downloading artifacts using their unique ID rather than name. This is particularly useful when working with immutable artifacts from `actions/upload-artifact@v4` which assigns a unique ID to each artifact.
+
+```yaml
+steps:
+- uses: actions/download-artifact@v4
+  with:
+    artifact-ids: 12345
+- name: Display structure of downloaded files
+  run: ls -R
+```
+
+Multiple artifacts can be downloaded by providing a comma-separated list of IDs:
+
+```yaml
+steps:
+- uses: actions/download-artifact@v4
+  with:
+    artifact-ids: 12345,67890
+    path: path/to/artifacts
+- name: Display structure of downloaded files
+  run: ls -R path/to/artifacts
+```
+
+This will download multiple artifacts to separate directories (similar to downloading multiple artifacts by name).
 
 ### Download All Artifacts
 
