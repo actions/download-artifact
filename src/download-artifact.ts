@@ -26,7 +26,8 @@ export async function run(): Promise<void> {
     mergeMultiple: core.getBooleanInput(Inputs.MergeMultiple, {
       required: false
     }),
-    artifactIds: core.getInput(Inputs.ArtifactIds, {required: false})
+    artifactIds: core.getInput(Inputs.ArtifactIds, {required: false}),
+    unzip: core.getInput(Inputs.UnZip, {required: false})
   }
 
   if (!inputs.path) {
@@ -169,17 +170,24 @@ export async function run(): Promise<void> {
     })
   }
 
-  const downloadPromises = artifacts.map(artifact => ({
-    name: artifact.name,
-    promise: artifactClient.downloadArtifact(artifact.id, {
-      ...options,
-      path:
-        isSingleArtifactDownload || inputs.mergeMultiple
-          ? resolvedPath
-          : path.join(resolvedPath, artifact.name),
-      expectedHash: artifact.digest
-    })
-  }))
+  const unzip_list = inputs.unzip.split(',');
+  const downloadPromises = artifacts.map(artifact => {
+    const unzip = inputs.unzip === 'true' || inputs.unzip === '*' || unzip_list.includes(artifact.id.toString()) || unzip_list.includes(artifact.name)
+    core.debug(`Unzip option for artifact '${artifact.name}': ${unzip}`)
+    return {
+      name: artifact.name,
+      promise: artifactClient.downloadArtifact(artifact.id, {
+        ...options,
+        unzip,
+        artifactName: artifact.name,
+        path:
+          isSingleArtifactDownload || inputs.mergeMultiple
+            ? resolvedPath
+            : path.join(resolvedPath, artifact.name),
+        expectedHash: artifact.digest
+      })
+    }
+  })
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
   for (const chunk of chunkedPromises) {
