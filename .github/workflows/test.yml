@@ -50,13 +50,15 @@ jobs:
         echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
 
-    - name: Upload artifact A
+    - id: artifact-a
+      name: Upload artifact A
       uses: actions/upload-artifact@v4
       with:
         name: Artifact-A-${{ matrix.runs-on }}
         path: path/to/artifact-A
 
-    - name: Upload artifact B
+    - id: artifact-b
+      name: Upload artifact B
       uses: actions/upload-artifact@v4
       with:
         name: Artifact-B-${{ matrix.runs-on }}
@@ -126,6 +128,66 @@ jobs:
         {
             Write-Error "Expected files do not exist"
         }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    # Test glob downloading both artifacts to same directory in zip format
+    - name: Download all Zipped Artifacts
+      uses: ./
+      with:
+        pattern: Artifact-*
+        unzip: false
+        path: single/directory
+        merge-multiple: true
+
+    - name: Verify successful download
+      run: |
+        $fileA = "$(ls single/directory/Artifact-A-*.zip)"
+        $fileB = "$(ls single/directory/Artifact-B-*.zip)"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+
+        unzip $fileA -d single/directory/
+        unzip $fileB -d single/directory/
+        
+        $fileA = "single/directory/file-A.txt"
+        $fileB = "single/directory/file-B.txt"
+        
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+      # Test glob downloading both artifacts using it's ids to same directory in zip format
+    - name: Download all Zipped Artifacts
+      uses: ./
+      with:
+        artifact-ids: ${{ steps.artifact-a.outputs.artifact-id }},${{ steps.artifact-b.outputs.artifact-id }}
+        unzip: false
+        path: single/directory
+        merge-multiple: true
+
+    - name: Verify successful download
+      run: |
+        $fileA = "$(ls single/directory/Artifact-A-*.zip)"
+        $fileB = "$(ls single/directory/Artifact-B-*.zip)"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+
+        unzip $fileA -d single/directory/
+        unzip $fileB -d single/directory/
+        
+        $fileA = "single/directory/file-A.txt"
+        $fileB = "single/directory/file-B.txt"
+        
         if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
         {
             Write-Error "File contents of downloaded artifacts are incorrect"

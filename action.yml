@@ -8,6 +8,10 @@ inputs:
   artifact-ids:
     description: 'IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both.'
     required: false
+  unzip:
+    description: 'Whenever to unzip the artifact after downloading. Comma separated list of artifact-ids, artifact-name or "*". Defaults to "*".'
+    required: false
+    default: '*'
   path:
     description: 'Destination path. Supports basic tilde expansion. Defaults to $GITHUB_WORKSPACE'
     required: false

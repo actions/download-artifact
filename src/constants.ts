@@ -6,7 +6,8 @@ export enum Inputs {
   RunID = 'run-id',
   Pattern = 'pattern',
   MergeMultiple = 'merge-multiple',
-  ArtifactIds = 'artifact-ids'
+  ArtifactIds = 'artifact-ids',
+  UnZip = "unzip"
 }
 
 export enum Outputs {
