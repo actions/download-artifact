@@ -8,6 +8,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
   - [v4 - What's new](#v4---whats-new)
     - [Improvements](#improvements)
     - [Breaking Changes](#breaking-changes)
+  - [Note](#note)
   - [Usage](#usage)
     - [Inputs](#inputs)
     - [Outputs](#outputs)
@@ -89,6 +90,7 @@ You are welcome to still raise bugs in this repo.
     # When multiple artifacts are matched, this changes the behavior of the destination directories.
     # If true, the downloaded artifacts will be in the same directory specified by path.
     # If false, the downloaded artifacts will be extracted into individual named directories within the specified path.
+    # Note: When downloading a single artifact (by name or ID), it will always be extracted directly to the specified path.
     # Optional. Default is 'false'
     merge-multiple:
 
@@ -145,6 +147,8 @@ steps:
 
 The `artifact-ids` input allows downloading artifacts using their unique ID rather than name. This is particularly useful when working with immutable artifacts from `actions/upload-artifact@v4` which assigns a unique ID to each artifact.
 
+Download a single artifact by ID to the current working directory (`$GITHUB_WORKSPACE`):
+
 ```yaml
 steps:
 - uses: actions/download-artifact@v4
@@ -153,6 +157,20 @@ steps:
 - name: Display structure of downloaded files
   run: ls -R
 ```
+
+Download a single artifact by ID to a specific directory:
+
+```yaml
+steps:
+- uses: actions/download-artifact@v4
+  with:
+    artifact-ids: 12345
+    path: your/destination/dir
+- name: Display structure of downloaded files
+  run: ls -R your/destination/dir
+```
+
+When downloading a single artifact by ID, the behavior is identical to downloading by name - the artifact contents are extracted directly to the specified path without creating a subdirectory.
 
 Multiple artifacts can be downloaded by providing a comma-separated list of IDs:
 
@@ -166,7 +184,7 @@ steps:
   run: ls -R path/to/artifacts
 ```
 
-This will download multiple artifacts to separate directories (similar to downloading multiple artifacts by name).
+When downloading multiple artifacts by ID, each artifact will be extracted into its own subdirectory named after the artifact (similar to downloading multiple artifacts by name).
 
 ### Download All Artifacts
 
