@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as path from 'path'
 import artifact, {ArtifactNotFoundError} from '@actions/artifact'
 import {run} from '../src/download-artifact'
 import {Inputs} from '../src/constants'
@@ -380,11 +381,12 @@ describe('download', () => {
       digest: 'def456'
     }
 
+    const testPath = '/test/path'
     mockInputs({
       [Inputs.Name]: '',
       [Inputs.Pattern]: '',
       [Inputs.ArtifactIds]: '456',
-      [Inputs.Path]: '/test/path'
+      [Inputs.Path]: testPath
     })
 
     jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
@@ -399,7 +401,7 @@ describe('download', () => {
     expect(artifact.downloadArtifact).toHaveBeenCalledWith(
       456,
       expect.objectContaining({
-        path: '/test/path', // Should be the resolved path directly, not /test/path/test-artifact
+        path: path.resolve(testPath), // Should be the resolved path directly, not nested
         expectedHash: mockArtifact.digest
       })
     )
