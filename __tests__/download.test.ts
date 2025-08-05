@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as path from 'path'
 import artifact, {ArtifactNotFoundError} from '@actions/artifact'
 import {run} from '../src/download-artifact'
 import {Inputs} from '../src/constants'
@@ -369,6 +370,40 @@ describe('download', () => {
 
     await expect(run()).rejects.toThrow(
       "Inputs 'name' and 'artifact-ids' cannot be used together. Please specify only one."
+    )
+  })
+
+  test('downloads single artifact by ID to same path as by name', async () => {
+    const mockArtifact = {
+      id: 456,
+      name: 'test-artifact',
+      size: 1024,
+      digest: 'def456'
+    }
+
+    const testPath = '/test/path'
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '456',
+      [Inputs.Path]: testPath
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: [mockArtifact]
+      })
+    )
+
+    await run()
+
+    // Verify it downloads directly to the specified path (not nested in artifact name subdirectory)
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.objectContaining({
+        path: path.resolve(testPath), // Should be the resolved path directly, not nested
+        expectedHash: mockArtifact.digest
+      })
     )
   })
 })
