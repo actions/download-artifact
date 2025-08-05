@@ -371,4 +371,37 @@ describe('download', () => {
       "Inputs 'name' and 'artifact-ids' cannot be used together. Please specify only one."
     )
   })
+
+  test('downloads single artifact by ID to same path as by name', async () => {
+    const mockArtifact = {
+      id: 456,
+      name: 'test-artifact',
+      size: 1024,
+      digest: 'def456'
+    }
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '456',
+      [Inputs.Path]: '/test/path'
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: [mockArtifact]
+      })
+    )
+
+    await run()
+
+    // Verify it downloads directly to the specified path (not nested in artifact name subdirectory)
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.objectContaining({
+        path: '/test/path', // Should be the resolved path directly, not /test/path/test-artifact
+        expectedHash: mockArtifact.digest
+      })
+    )
+  })
 })
