@@ -34,31 +34,6 @@ Now both methods are consistent:
 - **By name**: `name: my-artifact` → extracted to `path/` (unchanged)
 - **By ID**: `artifact-ids: 12345` → extracted to `path/` (updated - now direct)
 
-#### Migration Guide
-
-If you download **single artifacts by ID** and your workflows expect the nested directory structure:
-
-**Before v5 (nested structure):**
-
-```yaml
-- uses: actions/download-artifact@v4
-  with:
-    artifact-ids: 12345
-    path: dist
-# Files were in: dist/my-artifact/
-```
-
-> Where `my-artifact` is the name of the artifact you previously uploaded
-
-**To maintain old behavior:**
-
-```yaml
-- uses: actions/download-artifact@v5
-  with:
-    artifact-ids: 12345
-    path: dist/my-artifact  # Explicitly specify the nested path
-```
-
 ## v4 - What's new
 
 > [!IMPORTANT]
