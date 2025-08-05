@@ -36,7 +36,7 @@ Now both methods are consistent:
 
 #### Migration Guide
 
-You download **single artifacts by ID** and your workflows expect the nested directory structure.
+If you download **single artifacts by ID** and your workflows expect the nested directory structure:
 
 **Before v5 (nested structure):**
 
