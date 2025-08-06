@@ -108,7 +108,7 @@ You are welcome to still raise bugs in this repo.
 
     # The GitHub token used to authenticate with the GitHub API.
     # This is required when downloading artifacts from a different repository or from a different workflow run.
-    # Required permission for the token: actions: read
+    # Required token permission: actions (read) (when downloading from a different repository or workflow run)
     # Optional. If unspecified, the action will download artifacts from the current repo and the current workflow run.
     github-token:
 
