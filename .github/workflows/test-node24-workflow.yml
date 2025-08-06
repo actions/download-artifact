@@ -1,0 +1,49 @@
+name: Test with Node.js 24
+
+on:
+  push:
+    branches: [ node24 ]
+  workflow_dispatch:
+
+jobs:
+  test-node24:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup with Node.js 24
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Create a test artifact
+      - name: Create test file
+        run: |
+          mkdir -p test-artifact
+          echo "Hello from Node.js 24" > test-artifact/test.txt
+
+      # Upload the test artifact
+      - name: Upload test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifact
+          path: test-artifact
+
+      # Download using this action
+      - name: Download with the updated action
+        uses: ./
+        with:
+          name: test-artifact
+          path: downloaded-artifact
+
+      # Verify download succeeded
+      - name: Verify download
+        run: |
+          if [ -f "downloaded-artifact/test.txt" ]; then
+            echo "✅ Download succeeded!"
+            cat downloaded-artifact/test.txt
+          else
+            echo "❌ Download failed!"
+            exit 1
+          fi
