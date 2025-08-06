@@ -5,6 +5,7 @@ Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
 - [`@actions/download-artifact`](#actionsdownload-artifact)
+  - [v5 - What's new](#v5---whats-new)
   - [v4 - What's new](#v4---whats-new)
     - [Improvements](#improvements)
     - [Breaking Changes](#breaking-changes)
@@ -21,6 +22,17 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
   - [Limitations](#limitations)
     - [Permission Loss](#permission-loss)
 
+## v5 - What's new
+
+Previously, **single artifact downloads** behaved differently depending on how you specified the artifact:
+
+- **By name**: `name: my-artifact` → extracted to `path/` (direct)
+- **By ID**: `artifact-ids: 12345` → extracted to `path/my-artifact/` (nested)
+
+Now both methods are consistent:
+
+- **By name**: `name: my-artifact` → extracted to `path/` (unchanged)
+- **By ID**: `artifact-ids: 12345` → extracted to `path/` (updated - now direct)
 
 ## v4 - What's new
 
@@ -66,7 +78,7 @@ You are welcome to still raise bugs in this repo.
 ### Inputs
 
 ```yaml
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     # Name of the artifact to download.
     # If unspecified, all artifacts for the run are downloaded.
@@ -124,7 +136,7 @@ Download to current working directory (`$GITHUB_WORKSPACE`):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     name: my-artifact
 - name: Display structure of downloaded files
@@ -135,7 +147,7 @@ Download to a specific directory (also supports `~` expansion):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     name: my-artifact
     path: your/destination/dir
@@ -151,7 +163,7 @@ Download a single artifact by ID to the current working directory (`$GITHUB_WORK
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     artifact-ids: 12345
 - name: Display structure of downloaded files
@@ -162,7 +174,7 @@ Download a single artifact by ID to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     artifact-ids: 12345
     path: your/destination/dir
@@ -176,7 +188,7 @@ Multiple artifacts can be downloaded by providing a comma-separated list of IDs:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     artifact-ids: 12345,67890
     path: path/to/artifacts
@@ -204,7 +216,7 @@ Download all artifacts to the current working directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
 - name: Display structure of downloaded files
   run: ls -R
 ```
@@ -213,7 +225,7 @@ Download all artifacts to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     path: path/to/artifacts
 - name: Display structure of downloaded files
@@ -224,7 +236,7 @@ To download them to the _same_ directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     path: path/to/artifacts
     merge-multiple: true
@@ -264,7 +276,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download All Artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         path: my-artifact
         pattern: my-artifact-*
@@ -287,7 +299,7 @@ It may be useful to download Artifacts from other workflow runs, or even other r
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     name: my-other-artifact
     github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
