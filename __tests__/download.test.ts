@@ -406,4 +406,122 @@ describe('download', () => {
       })
     )
   })
+
+  test('downloads single artifact to dedicated folders named after the artifact within provided path', async () => {
+    jest.clearAllMocks()
+
+    const testPath = '/test/path'
+    const mockArtifacts = [
+      {id: 101, name: 'frontend-build', size: 2048, digest: 'abc123'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '',
+      [Inputs.Path]: testPath,
+      [Inputs.MergeMultiple]: false
+    })
+
+    jest
+      .spyOn(artifact, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    jest
+      .spyOn(artifact, 'downloadArtifact')
+      .mockImplementation(() => Promise.resolve({digestMismatch: false}))
+
+    await run()
+
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
+
+    // Verify the artifact is downloaded to its own folder within the provided path
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        path: path.join(path.resolve(testPath), 'frontend-build'),
+        expectedHash: 'abc123'
+      })
+    )
+
+    expect(core.info).toHaveBeenCalledWith(
+      'No input name, artifact-ids or pattern filtered specified, downloading all artifacts'
+    )
+    expect(core.info).toHaveBeenCalledWith(
+      'An extra directory with the artifact name will be created for each download'
+    )
+    expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'download-path',
+      path.resolve(testPath)
+    )
+  })
+
+  test('downloads multiple artifacts to separate folders named after each artifact within provided path', async () => {
+    jest.clearAllMocks()
+
+    const testPath = '/test/path'
+    const mockArtifacts = [
+      {id: 101, name: 'frontend-build', size: 2048, digest: 'abc123'},
+      {id: 102, name: 'backend-build', size: 4096, digest: 'def456'},
+      {id: 103, name: 'test-results', size: 1024, digest: 'ghi789'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '',
+      [Inputs.Path]: testPath,
+      [Inputs.MergeMultiple]: false
+    })
+
+    jest
+      .spyOn(artifact, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    jest
+      .spyOn(artifact, 'downloadArtifact')
+      .mockImplementation(() => Promise.resolve({digestMismatch: false}))
+
+    await run()
+
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(3)
+
+    // Verify each artifact is downloaded to its own folder within the provided path
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        path: path.join(path.resolve(testPath), 'frontend-build'),
+        expectedHash: 'abc123'
+      })
+    )
+
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      102,
+      expect.objectContaining({
+        path: path.join(path.resolve(testPath), 'backend-build'),
+        expectedHash: 'def456'
+      })
+    )
+
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      103,
+      expect.objectContaining({
+        path: path.join(path.resolve(testPath), 'test-results'),
+        expectedHash: 'ghi789'
+      })
+    )
+
+    expect(core.info).toHaveBeenCalledWith(
+      'No input name, artifact-ids or pattern filtered specified, downloading all artifacts'
+    )
+    expect(core.info).toHaveBeenCalledWith(
+      'An extra directory with the artifact name will be created for each download'
+    )
+    expect(core.info).toHaveBeenCalledWith('Total of 3 artifact(s) downloaded')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'download-path',
+      path.resolve(testPath)
+    )
+  })
 })
