@@ -176,7 +176,7 @@ export async function run(): Promise<void> {
       path:
         isSingleArtifactDownload ||
         inputs.mergeMultiple ||
-        artifacts.length === 1
+        (artifacts.length === 1 && isDownloadByIds)
           ? resolvedPath
           : path.join(resolvedPath, artifact.name),
       expectedHash: artifact.digest
