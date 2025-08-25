@@ -34,6 +34,8 @@ Now both methods are consistent:
 - **By name**: `name: my-artifact` → extracted to `path/` (unchanged)
 - **By ID**: `artifact-ids: 12345` → extracted to `path/` (updated - now direct)
 
+Note: This change also applies to patterns that only match a single artifact.
+
 ## v4 - What's new
 
 > [!IMPORTANT]
