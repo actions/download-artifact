@@ -40,6 +40,9 @@ jobs:
     - name: Format
       run: npm run format-check
 
+    - name: Run Unit Tests
+      run: npm test
+
     - name: Create artifacts
       run: |
         mkdir -p path/to/artifact-A

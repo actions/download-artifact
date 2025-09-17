@@ -1,6 +1,6 @@
 {
   "name": "download-artifact",
-  "version": "4.1.9",
+  "version": "4.3.0",
   "description": "Download an Actions Artifact from a workflow run",
   "main": "dist/index.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:build\"",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
-    "lint": "eslint **/*.ts"
+    "lint": "eslint **/*.ts",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -28,12 +29,13 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^2.2.2",
+    "@actions/artifact": "^2.3.2",
     "@actions/core": "^1.10.1",
     "@actions/github": "^5.1.1",
     "minimatch": "^9.0.3"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^12.12.6",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@vercel/ncc": "^0.33.4",
@@ -41,7 +43,10 @@
     "eslint": "^8.55.0",
     "eslint-plugin-github": "^4.10.1",
     "eslint-plugin-prettier": "^5.0.1",
+    "jest": "^29.7.0",
     "prettier": "^3.1.1",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }

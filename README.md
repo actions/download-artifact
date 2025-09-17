@@ -1,30 +1,40 @@
 # `@actions/download-artifact`
 
-> [!WARNING]
-> actions/download-artifact@v3 is scheduled for deprecation on **November 30, 2024**. [Learn more.](https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/)
-> Similarly, v1/v2 are scheduled for deprecation on **June 30, 2024**.
-> Please update your workflow to use v4 of the artifact actions.
-> This deprecation will not impact any existing versions of GitHub Enterprise Server being used by customers.
-
 Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts) from your Workflow Runs. Internally powered by the [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) package.
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
 - [`@actions/download-artifact`](#actionsdownload-artifact)
+  - [v5 - What's new](#v5---whats-new)
   - [v4 - What's new](#v4---whats-new)
     - [Improvements](#improvements)
     - [Breaking Changes](#breaking-changes)
+  - [Note](#note)
   - [Usage](#usage)
     - [Inputs](#inputs)
     - [Outputs](#outputs)
   - [Examples](#examples)
     - [Download Single Artifact](#download-single-artifact)
+    - [Download Artifacts by ID](#download-artifacts-by-id)
     - [Download All Artifacts](#download-all-artifacts)
     - [Download multiple (filtered) Artifacts to the same directory](#download-multiple-filtered-artifacts-to-the-same-directory)
     - [Download Artifacts from other Workflow Runs or Repositories](#download-artifacts-from-other-workflow-runs-or-repositories)
   - [Limitations](#limitations)
     - [Permission Loss](#permission-loss)
 
+## v5 - What's new
+
+Previously, **single artifact downloads** behaved differently depending on how you specified the artifact:
+
+- **By name**: `name: my-artifact` → extracted to `path/` (direct)
+- **By ID**: `artifact-ids: 12345` → extracted to `path/my-artifact/` (nested)
+
+Now both methods are consistent:
+
+- **By name**: `name: my-artifact` → extracted to `path/` (unchanged)
+- **By ID**: `artifact-ids: 12345` → extracted to `path/` (updated - now direct)
+
+Note: This change also applies to patterns that only match a single artifact.
 
 ## v4 - What's new
 
@@ -47,17 +57,40 @@ For more information, see the [`@actions/artifact`](https://github.com/actions/t
 
 For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
 
+## Note
+
+Thank you for your interest in this GitHub repo, however, right now we are not taking contributions. 
+
+We continue to focus our resources on strategic areas that help our customers be successful while making developers' lives easier. While GitHub Actions remains a key part of this vision, we are allocating resources towards other areas of Actions and are not taking contributions to this repository at this time. The GitHub public roadmap is the best place to follow along for any updates on features we’re working on and what stage they’re in.
+
+We are taking the following steps to better direct requests related to GitHub Actions, including:
+
+1. We will be directing questions and support requests to our [Community Discussions area](https://github.com/orgs/community/discussions/categories/actions)
+
+2. High Priority bugs can be reported through Community Discussions or you can report these to our support team https://support.github.com/contact/bug-report.
+
+3. Security Issues should be handled as per our [security.md](SECURITY.md).
+
+We will still provide security updates for this project and fix major breaking changes during this time.
+
+You are welcome to still raise bugs in this repo.
+
 ## Usage
 
 ### Inputs
 
 ```yaml
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     # Name of the artifact to download.
     # If unspecified, all artifacts for the run are downloaded.
     # Optional.
     name:
+
+    # IDs of the artifacts to download, comma-separated.
+    # Either inputs `artifact-ids` or `name` can be used, but not both.
+    # Optional.
+    artifact-ids:
 
     # Destination path. Supports basic tilde expansion.
     # Optional. Default is $GITHUB_WORKSPACE
@@ -71,6 +104,7 @@ For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
     # When multiple artifacts are matched, this changes the behavior of the destination directories.
     # If true, the downloaded artifacts will be in the same directory specified by path.
     # If false, the downloaded artifacts will be extracted into individual named directories within the specified path.
+    # Note: When downloading a single artifact (by name or ID), it will always be extracted directly to the specified path.
     # Optional. Default is 'false'
     merge-multiple:
 
@@ -104,7 +138,7 @@ Download to current working directory (`$GITHUB_WORKSPACE`):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     name: my-artifact
 - name: Display structure of downloaded files
@@ -115,7 +149,7 @@ Download to a specific directory (also supports `~` expansion):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     name: my-artifact
     path: your/destination/dir
@@ -123,6 +157,48 @@ steps:
   run: ls -R your/destination/dir
 ```
 
+### Download Artifacts by ID
+
+The `artifact-ids` input allows downloading artifacts using their unique ID rather than name. This is particularly useful when working with immutable artifacts from `actions/upload-artifact@v4` which assigns a unique ID to each artifact.
+
+Download a single artifact by ID to the current working directory (`$GITHUB_WORKSPACE`):
+
+```yaml
+steps:
+- uses: actions/download-artifact@v5
+  with:
+    artifact-ids: 12345
+- name: Display structure of downloaded files
+  run: ls -R
+```
+
+Download a single artifact by ID to a specific directory:
+
+```yaml
+steps:
+- uses: actions/download-artifact@v5
+  with:
+    artifact-ids: 12345
+    path: your/destination/dir
+- name: Display structure of downloaded files
+  run: ls -R your/destination/dir
+```
+
+When downloading a single artifact by ID, the behavior is identical to downloading by name - the artifact contents are extracted directly to the specified path without creating a subdirectory.
+
+Multiple artifacts can be downloaded by providing a comma-separated list of IDs:
+
+```yaml
+steps:
+- uses: actions/download-artifact@v5
+  with:
+    artifact-ids: 12345,67890
+    path: path/to/artifacts
+- name: Display structure of downloaded files
+  run: ls -R path/to/artifacts
+```
+
+When downloading multiple artifacts by ID, each artifact will be extracted into its own subdirectory named after the artifact (similar to downloading multiple artifacts by name).
 
 ### Download All Artifacts
 
@@ -142,7 +218,7 @@ Download all artifacts to the current working directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
 - name: Display structure of downloaded files
   run: ls -R
 ```
@@ -151,7 +227,7 @@ Download all artifacts to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     path: path/to/artifacts
 - name: Display structure of downloaded files
@@ -162,7 +238,7 @@ To download them to the _same_ directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     path: path/to/artifacts
     merge-multiple: true
@@ -202,7 +278,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download All Artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         path: my-artifact
         pattern: my-artifact-*
@@ -225,7 +301,7 @@ It may be useful to download Artifacts from other workflow runs, or even other r
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v4
+- uses: actions/download-artifact@v5
   with:
     name: my-other-artifact
     github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
