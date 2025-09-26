@@ -2,5 +2,12 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
 	"name": "@actions/download-artifact",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:0-16"
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:0-16",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Orta.vscode-jest"
+			]
+		}
+	}
 }
