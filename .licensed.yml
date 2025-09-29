@@ -16,9 +16,7 @@ allowed:
 
 ignored:
   npm:
-    - "@bufbuild/protobuf"
-    - "buffers" 
-    - "chainsaw"
+    - "buffers"
 
 reviewed:
   npm:
@@ -28,7 +26,6 @@ reviewed:
   - "@pkgjs/parseargs"
   - "@protobuf-ts/runtime"
   - argparse
-  - buffers
   - chainsaw
   - color-convert
   - ieee754
