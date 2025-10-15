@@ -1,10 +1,10 @@
 ---
 name: tar-stream
-version: 2.2.0
+version: 3.1.7
 type: npm
-summary: tar-stream is a streaming tar parser and generator and nothing else. It is
-  streams2 and operates purely using streams which means you can easily extract/parse
-  tarballs without ever hitting the file system.
+summary: tar-stream is a streaming tar parser and generator and nothing else. It operates
+  purely using streams which means you can easily extract/parse tarballs without ever
+  hitting the file system.
 homepage: https://github.com/mafintosh/tar-stream
 license: mit
 licenses:

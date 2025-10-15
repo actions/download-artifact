@@ -1,6 +1,6 @@
 ---
 name: zip-stream
-version: 4.1.1
+version: 6.0.1
 type: npm
 summary: a streaming zip archive generator.
 homepage: https://github.com/archiverjs/node-zip-stream

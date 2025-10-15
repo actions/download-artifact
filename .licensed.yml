@@ -9,7 +9,37 @@ allowed:
   - mit
   - cc0-1.0
   - unlicense
+  - 0bsd
+  - blueoak-1.0.0
+  - other
+  - none
+
+ignored:
+  npm:
+    - "buffers"
 
 reviewed:
   npm:
   - fs.realpath
+  - "@actions/http-client"
+  - "@bufbuild/protobuf"
+  - "@pkgjs/parseargs"
+  - "@protobuf-ts/runtime"
+  - argparse
+  - chainsaw
+  - color-convert
+  - ieee754
+  - jackspeak
+  - lodash
+  - mdurl
+  - neo-async
+  - package-json-from-dist
+  - path-scurry
+  - readable-stream
+  - sax
+  - source-map
+  - string_decoder
+  - traverse
+  - tslib
+  - uglify-js
+  - wordwrap
