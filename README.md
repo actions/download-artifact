@@ -39,7 +39,7 @@ Note: This change also applies to patterns that only match a single artifact.
 ## v4 - What's new
 
 > [!IMPORTANT]
-> download-artifact@v4+ is not currently supported on GHES yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3).
+> download-artifact@v4+ is not currently supported on GitHub Enterprise Server (GHES) yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3).
 
 The release of upload-artifact@v4 and download-artifact@v4 are major changes to the backend architecture of Artifacts. They have numerous performance and behavioral improvements.
 
