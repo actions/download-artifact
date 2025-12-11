@@ -33,7 +33,7 @@
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
     "@actions/artifact": "file:../packages/artifact",
-    "@actions/core": "file:../packages/core",
+    "@actions/core": "^2.0.0",
     "@actions/github": "^6.0.1",
     "minimatch": "^9.0.3"
   },
