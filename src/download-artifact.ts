@@ -174,7 +174,9 @@ export async function run(): Promise<void> {
     promise: artifactClient.downloadArtifact(artifact.id, {
       ...options,
       path:
-        isSingleArtifactDownload || inputs.mergeMultiple
+        isSingleArtifactDownload ||
+        inputs.mergeMultiple ||
+        artifacts.length === 1
           ? resolvedPath
           : path.join(resolvedPath, artifact.name),
       expectedHash: artifact.digest

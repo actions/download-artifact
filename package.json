@@ -1,6 +1,6 @@
 {
   "name": "download-artifact",
-  "version": "4.3.0",
+  "version": "6.0.0",
   "description": "Download an Actions Artifact from a workflow run",
   "engines": {
     "node": ">=24"
@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "5.0.0",
+    "@actions/artifact": "^5.0.0",
     "@actions/core": "^2.0.0",
     "@actions/github": "^6.0.1",
     "minimatch": "^9.0.3"
