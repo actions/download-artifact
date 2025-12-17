@@ -337,3 +337,10 @@ If you must preserve permissions, you can `tar` all of your files together befor
     name: my-artifact
     path: my_files.tar
 ```
+
+# Recommended Permissions
+
+The `actions/download-artifact` workflow relies on an internal authentication pattern and does not use the GITHUB_TOKEN, to reduce risk of over-privileged token, jobs that use `actions/download-artifact` should set permissions to none:
+
+```yaml
+perm
