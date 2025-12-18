@@ -38,6 +38,8 @@ inputs:
 outputs:
   download-path:
     description: 'Path of artifact download'
+  artifacts:
+    description: downloaded artifacts json array string
 runs:
   using: 'node24'
   main: 'dist/index.js'
