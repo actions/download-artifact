@@ -112,7 +112,8 @@ You are welcome to still raise bugs in this repo.
     pattern:
 
     # When multiple artifacts are matched, this changes the behavior of the destination directories.
-    # If true, the downloaded artifacts will be in the same directory specified by path.
+    # If true, the downloaded artifacts will be in the same directory specified by path. There is no check for file name
+    # collisions. If multiple artifacts have files with the same name, only one will end up in path.
     # If false, the downloaded artifacts will be extracted into individual named directories within the specified path.
     # Note: When downloading a single artifact (by name or ID), it will always be extracted directly to the specified path.
     # Optional. Default is 'false'
