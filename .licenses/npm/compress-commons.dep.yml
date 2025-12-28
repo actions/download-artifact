@@ -1,6 +1,6 @@
 ---
 name: compress-commons
-version: 4.1.2
+version: 6.0.2
 type: npm
 summary: a library that defines a common interface for working with archive formats
   within node

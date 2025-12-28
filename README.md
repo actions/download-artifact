@@ -5,6 +5,7 @@ Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
 - [`@actions/download-artifact`](#actionsdownload-artifact)
+  - [v7 - What's new](#v7---whats-new)
   - [v5 - What's new](#v5---whats-new)
   - [v4 - What's new](#v4---whats-new)
     - [Improvements](#improvements)
@@ -22,6 +23,15 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
   - [Limitations](#limitations)
     - [Permission Loss](#permission-loss)
 
+## v7 - What's new
+
+> [!IMPORTANT]
+> actions/download-artifact@v7 now runs on Node.js 24 (`runs.using: node24`) and requires a minimum Actions Runner version of 2.327.1. If you are using self-hosted runners, ensure they are updated before upgrading.
+
+### Node.js 24
+
+This release updates the runtime to Node.js 24. v6 had preliminary support for Node 24, however this action was by default still running on Node.js 20. Now this action by default will run on Node.js 24.
+
 ## v5 - What's new
 
 Previously, **single artifact downloads** behaved differently depending on how you specified the artifact:
@@ -34,10 +44,12 @@ Now both methods are consistent:
 - **By name**: `name: my-artifact` → extracted to `path/` (unchanged)
 - **By ID**: `artifact-ids: 12345` → extracted to `path/` (updated - now direct)
 
+Note: This change also applies to patterns that only match a single artifact.
+
 ## v4 - What's new
 
 > [!IMPORTANT]
-> download-artifact@v4+ is not currently supported on GHES yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3).
+> download-artifact@v4+ is not currently supported on GitHub Enterprise Server (GHES) yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3) (Node 16) or [v3-node20](https://github.com/actions/download-artifact/releases/tag/v3-node20) (Node 20).
 
 The release of upload-artifact@v4 and download-artifact@v4 are major changes to the backend architecture of Artifacts. They have numerous performance and behavioral improvements.
 
