@@ -251,7 +251,7 @@ describe('download', () => {
       .mockImplementation(() => Promise.resolve({digestMismatch: true}))
 
     await expect(run()).rejects.toThrow(
-      "Digest validation failed for artifact(s): corrupted-artifact"
+      'Digest validation failed for artifact(s): corrupted-artifact'
     )
   })
 
