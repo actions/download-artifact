@@ -142,15 +142,15 @@ jobs:
 
     - name: Verify skip-decompress download
       run: |
-        $zipFile = "skip-decompress-test/Artifact-A-${{ matrix.runs-on }}.zip"
-        if(!(Test-Path -path $zipFile))
+        $rawFile = "skip-decompress-test/artifact"
+        if(!(Test-Path -path $rawFile))
         {
-            Write-Error "Expected zip file does not exist at $zipFile"
+            Write-Error "Expected raw artifact file does not exist at $rawFile"
         }
-        $fileInfo = Get-Item $zipFile
+        $fileInfo = Get-Item $rawFile
         if($fileInfo.Length -eq 0)
         {
-            Write-Error "Downloaded zip file is empty"
+            Write-Error "Downloaded artifact file is empty"
         }
-        Write-Host "Successfully downloaded artifact as zip file: $zipFile (size: $($fileInfo.Length) bytes)"
+        Write-Host "Successfully downloaded artifact without decompressing: $rawFile (size: $($fileInfo.Length) bytes)"
       shell: pwsh
