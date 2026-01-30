@@ -2,6 +2,7 @@
   "name": "download-artifact",
   "version": "7.0.0",
   "description": "Download an Actions Artifact from a workflow run",
+  "type": "module",
   "engines": {
     "node": ">=24"
   },
@@ -13,7 +14,7 @@
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "lint": "eslint **/*.ts",
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "repository": {
     "type": "git",
@@ -32,22 +33,24 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^5.0.0",
-    "@actions/core": "^2.0.0",
-    "@actions/github": "^6.0.1",
-    "minimatch": "^9.0.3"
+    "@actions/artifact": "^6.1.0",
+    "@actions/core": "^3.0.0",
+    "minimatch": "^10.1.1"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/node": "^24.1.0",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@vercel/ncc": "^0.33.4",
-    "concurrently": "^5.2.0",
-    "eslint": "^8.55.0",
-    "eslint-plugin-github": "^4.10.1",
-    "eslint-plugin-prettier": "^5.0.1",
-    "jest": "^29.7.0",
-    "prettier": "^3.1.1",
+    "@actions/github": "^9.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "@vercel/ncc": "^0.38.4",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.2",
+    "eslint-plugin-github": "^6.0.0",
+    "eslint-plugin-jest": "^29.12.1",
+    "eslint-plugin-prettier": "^5.5.5",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1",
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
