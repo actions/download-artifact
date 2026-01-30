@@ -440,4 +440,87 @@ describe('download', () => {
       })
     )
   })
+
+  test('passes skipDecompress option when skip-decompress input is true', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'artifact-name',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.SkipDecompress]: true
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    await run()
+
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      mockArtifact.id,
+      expect.objectContaining({
+        skipDecompress: true,
+        expectedHash: mockArtifact.digest
+      })
+    )
+  })
+
+  test('does not pass skipDecompress when skip-decompress input is false', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'artifact-name',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.SkipDecompress]: false
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    await run()
+
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      mockArtifact.id,
+      expect.objectContaining({
+        skipDecompress: false,
+        expectedHash: mockArtifact.digest
+      })
+    )
+  })
+
+  test('passes skipDecompress for multiple artifact downloads', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.SkipDecompress]: true
+    })
+
+    const mockArtifacts = [
+      {id: 123, name: 'artifact1', size: 1024, digest: 'abc123'},
+      {id: 456, name: 'artifact2', size: 2048, digest: 'def456'}
+    ]
+
+    jest
+      .spyOn(artifact.default, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    await run()
+
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(2)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      123,
+      expect.objectContaining({skipDecompress: true})
+    )
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.objectContaining({skipDecompress: true})
+    )
+  })
 })
