@@ -234,7 +234,7 @@ describe('download', () => {
     )
   })
 
-  test('warns when digest validation fails', async () => {
+  test('errors when digest validation fails (default behavior)', async () => {
     const mockArtifact = {
       id: 123,
       name: 'corrupted-artifact',
@@ -250,11 +250,91 @@ describe('download', () => {
       .spyOn(artifact.default, 'downloadArtifact')
       .mockImplementation(() => Promise.resolve({digestMismatch: true}))
 
+    await expect(run()).rejects.toThrow(
+      "Digest validation failed for artifact(s): corrupted-artifact"
+    )
+  })
+
+  test('warns when digest validation fails with digest-mismatch set to warn', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'corrupted-artifact',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.DigestMismatch]: 'warn'
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    jest
+      .spyOn(artifact.default, 'downloadArtifact')
+      .mockImplementation(() => Promise.resolve({digestMismatch: true}))
+
     await run()
 
     expect(core.warning).toHaveBeenCalledWith(
       expect.stringContaining('digest validation failed')
     )
+  })
+
+  test('logs info when digest validation fails with digest-mismatch set to info', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'corrupted-artifact',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.DigestMismatch]: 'info'
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    jest
+      .spyOn(artifact.default, 'downloadArtifact')
+      .mockImplementation(() => Promise.resolve({digestMismatch: true}))
+
+    await run()
+
+    expect(core.info).toHaveBeenCalledWith(
+      expect.stringContaining('digest validation failed')
+    )
+  })
+
+  test('silently continues when digest validation fails with digest-mismatch set to ignore', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'corrupted-artifact',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.DigestMismatch]: 'ignore'
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    jest
+      .spyOn(artifact.default, 'downloadArtifact')
+      .mockImplementation(() => Promise.resolve({digestMismatch: true}))
+
+    await run()
+
+    expect(core.warning).not.toHaveBeenCalledWith(
+      expect.stringContaining('digest validation failed')
+    )
+    expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
   })
 
   test('downloads a single artifact by ID', async () => {

@@ -4,7 +4,7 @@ import * as core from '@actions/core'
 import artifactClient from '@actions/artifact'
 import type {Artifact, FindOptions} from '@actions/artifact'
 import {Minimatch} from 'minimatch'
-import {Inputs, Outputs} from './constants.js'
+import {Inputs, Outputs, DigestMismatchBehavior} from './constants.js'
 
 const PARALLEL_DOWNLOADS = 5
 
@@ -29,7 +29,17 @@ export async function run(): Promise<void> {
     artifactIds: core.getInput(Inputs.ArtifactIds, {required: false}),
     skipDecompress: core.getBooleanInput(Inputs.SkipDecompress, {
       required: false
-    })
+    }),
+    digestMismatch: (core.getInput(Inputs.DigestMismatch, {required: false}) ||
+      DigestMismatchBehavior.Error) as DigestMismatchBehavior
+  }
+
+  // Validate digest-mismatch input
+  const validBehaviors = Object.values(DigestMismatchBehavior)
+  if (!validBehaviors.includes(inputs.digestMismatch)) {
+    throw new Error(
+      `Invalid value for 'digest-mismatch': '${inputs.digestMismatch}'. Valid options are: ${validBehaviors.join(', ')}`
+    )
   }
 
   if (!inputs.path) {
@@ -188,6 +198,8 @@ export async function run(): Promise<void> {
   }))
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
+  const digestMismatches: string[] = []
+
   for (const chunk of chunkedPromises) {
     const chunkPromises = chunk.map(item => item.promise)
     const results = await Promise.all(chunkPromises)
@@ -197,12 +209,38 @@ export async function run(): Promise<void> {
       const artifactName = chunk[i].name
 
       if (outcome.digestMismatch) {
-        core.warning(
-          `Artifact '${artifactName}' digest validation failed. Please verify the integrity of the artifact.`
-        )
+        digestMismatches.push(artifactName)
+        const message = `Artifact '${artifactName}' digest validation failed. Please verify the integrity of the artifact.`
+
+        switch (inputs.digestMismatch) {
+          case DigestMismatchBehavior.Ignore:
+            // Do nothing
+            break
+          case DigestMismatchBehavior.Info:
+            core.info(message)
+            break
+          case DigestMismatchBehavior.Warn:
+            core.warning(message)
+            break
+          case DigestMismatchBehavior.Error:
+            // Collect all errors and fail at the end
+            break
+        }
       }
     }
   }
+
+  // If there were digest mismatches and behavior is 'error', fail the action
+  if (
+    digestMismatches.length > 0 &&
+    inputs.digestMismatch === DigestMismatchBehavior.Error
+  ) {
+    throw new Error(
+      `Digest validation failed for artifact(s): ${digestMismatches.join(', ')}. ` +
+        `Use 'digest-mismatch: warn' to continue on mismatch.`
+    )
+  }
+
   core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
   core.setOutput(Outputs.DownloadPath, resolvedPath)
   core.info('Download artifact has finished successfully')

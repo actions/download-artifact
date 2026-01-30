@@ -7,7 +7,15 @@ export enum Inputs {
   Pattern = 'pattern',
   MergeMultiple = 'merge-multiple',
   ArtifactIds = 'artifact-ids',
-  SkipDecompress = 'skip-decompress'
+  SkipDecompress = 'skip-decompress',
+  DigestMismatch = 'digest-mismatch'
+}
+
+export enum DigestMismatchBehavior {
+  Ignore = 'ignore',
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error'
 }
 
 export enum Outputs {

@@ -40,6 +40,11 @@ inputs:
       This is useful when you want to handle the artifact as-is without extraction.'
     required: false
     default: 'false'
+  digest-mismatch:
+    description: 'The behavior when a downloaded artifact''s digest does not match the expected digest.
+      Options: ignore, info, warn, error. Default is error which will fail the action.'
+    required: false
+    default: 'error'
 outputs:
   download-path:
     description: 'Path of artifact download'
