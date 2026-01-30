@@ -131,3 +131,26 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
+
+    # Test downloading artifact without decompressing (skip-decompress)
+    - name: Download artifact A without decompressing
+      uses: ./
+      with:
+        name: Artifact-A-${{ matrix.runs-on }}
+        path: skip-decompress-test
+        skip-decompress: true
+
+    - name: Verify skip-decompress download
+      run: |
+        $zipFile = "skip-decompress-test/Artifact-A-${{ matrix.runs-on }}.zip"
+        if(!(Test-Path -path $zipFile))
+        {
+            Write-Error "Expected zip file does not exist at $zipFile"
+        }
+        $fileInfo = Get-Item $zipFile
+        if($fileInfo.Length -eq 0)
+        {
+            Write-Error "Downloaded zip file is empty"
+        }
+        Write-Host "Successfully downloaded artifact as zip file: $zipFile (size: $($fileInfo.Length) bytes)"
+      shell: pwsh
