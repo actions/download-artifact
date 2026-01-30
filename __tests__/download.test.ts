@@ -1,10 +1,8 @@
-import * as core from '@actions/core'
+import {jest, describe, test, expect, beforeEach} from '@jest/globals'
 import * as path from 'path'
-import artifact, {ArtifactNotFoundError} from '@actions/artifact'
-import {run} from '../src/download-artifact'
-import {Inputs} from '../src/constants'
 
-jest.mock('@actions/github', () => ({
+// Mock @actions/github before importing modules that use it
+jest.unstable_mockModule('@actions/github', () => ({
   context: {
     repo: {
       owner: 'actions',
@@ -12,14 +10,46 @@ jest.mock('@actions/github', () => ({
     },
     runId: 123,
     serverUrl: 'https://github.com'
-  }
+  },
+  getOctokit: jest.fn()
 }))
 
-jest.mock('@actions/core')
+// Mock @actions/core
+jest.unstable_mockModule('@actions/core', () => ({
+  getInput: jest.fn(),
+  getBooleanInput: jest.fn(),
+  setOutput: jest.fn(),
+  setFailed: jest.fn(),
+  setSecret: jest.fn(),
+  info: jest.fn(),
+  warning: jest.fn(),
+  debug: jest.fn(),
+  error: jest.fn(),
+  notice: jest.fn(),
+  startGroup: jest.fn(),
+  endGroup: jest.fn(),
+  isDebug: jest.fn(() => false),
+  getState: jest.fn(),
+  saveState: jest.fn(),
+  exportVariable: jest.fn(),
+  addPath: jest.fn(),
+  group: jest.fn((name: string, fn: () => Promise<unknown>) => fn()),
+  toPlatformPath: jest.fn(p => p),
+  toWin32Path: jest.fn(p => p),
+  toPosixPath: jest.fn(p => p)
+}))
 
-/* eslint-disable no-unused-vars */ /* eslint-disable  @typescript-eslint/no-explicit-any */
-const mockInputs = (overrides?: Partial<{[K in Inputs]?: any}>) => {
-  const inputs = {
+// Dynamic imports after mocking
+const core = await import('@actions/core')
+const artifact = await import('@actions/artifact')
+const {run} = await import('../src/download-artifact.js')
+const {Inputs} = await import('../src/constants.js')
+const {ArtifactNotFoundError} = artifact
+
+const mockInputs = (
+  overrides?: Partial<{[K in (typeof Inputs)[keyof typeof Inputs]]?: any}>
+) => {
+  const inputs: Record<string, any> = {
     [Inputs.Name]: 'artifact-name',
     [Inputs.Path]: '/some/artifact/path',
     [Inputs.GitHubToken]: 'warn',
@@ -29,10 +59,14 @@ const mockInputs = (overrides?: Partial<{[K in Inputs]?: any}>) => {
     ...overrides
   }
 
-  ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
-    return inputs[name]
-  })
-  ;(core.getBooleanInput as jest.Mock).mockImplementation((name: string) => {
+  ;(core.getInput as jest.Mock<typeof core.getInput>).mockImplementation(
+    (name: string) => {
+      return inputs[name]
+    }
+  )
+  ;(
+    core.getBooleanInput as jest.Mock<typeof core.getBooleanInput>
+  ).mockImplementation((name: string) => {
     return inputs[name]
   })
 
@@ -46,13 +80,13 @@ describe('download', () => {
 
     // Mock artifact client methods
     jest
-      .spyOn(artifact, 'listArtifacts')
+      .spyOn(artifact.default, 'listArtifacts')
       .mockImplementation(() => Promise.resolve({artifacts: []}))
-    jest.spyOn(artifact, 'getArtifact').mockImplementation(name => {
+    jest.spyOn(artifact.default, 'getArtifact').mockImplementation(name => {
       throw new ArtifactNotFoundError(`Artifact '${name}' not found`)
     })
     jest
-      .spyOn(artifact, 'downloadArtifact')
+      .spyOn(artifact.default, 'downloadArtifact')
       .mockImplementation(() => Promise.resolve({digestMismatch: false}))
   })
 
@@ -65,12 +99,12 @@ describe('download', () => {
     }
 
     jest
-      .spyOn(artifact, 'getArtifact')
+      .spyOn(artifact.default, 'getArtifact')
       .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
 
     await run()
 
-    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
       mockArtifact.id,
       expect.objectContaining({
         expectedHash: mockArtifact.digest
@@ -102,12 +136,12 @@ describe('download', () => {
 
     // Set up artifact mock after clearing mocks
     jest
-      .spyOn(artifact, 'listArtifacts')
+      .spyOn(artifact.default, 'listArtifacts')
       .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
 
     // Reset downloadArtifact mock as well
     jest
-      .spyOn(artifact, 'downloadArtifact')
+      .spyOn(artifact.default, 'downloadArtifact')
       .mockImplementation(() => Promise.resolve({digestMismatch: false}))
 
     await run()
@@ -117,7 +151,7 @@ describe('download', () => {
     )
 
     expect(core.info).toHaveBeenCalledWith('Total of 2 artifact(s) downloaded')
-    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(2)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(2)
   })
 
   test('sets download path output even when no artifacts are found', async () => {
@@ -144,7 +178,7 @@ describe('download', () => {
     ]
 
     jest
-      .spyOn(artifact, 'listArtifacts')
+      .spyOn(artifact.default, 'listArtifacts')
       .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
 
     mockInputs({
@@ -154,8 +188,8 @@ describe('download', () => {
 
     await run()
 
-    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
-    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
       123,
       expect.anything()
     )
@@ -172,12 +206,12 @@ describe('download', () => {
     })
 
     jest
-      .spyOn(artifact, 'listArtifacts')
+      .spyOn(artifact.default, 'listArtifacts')
       .mockImplementation(() => Promise.resolve({artifacts: []}))
 
     await run()
 
-    expect(artifact.listArtifacts).toHaveBeenCalledWith(
+    expect(artifact.default.listArtifacts).toHaveBeenCalledWith(
       expect.objectContaining({
         findBy: {
           token,
@@ -209,11 +243,11 @@ describe('download', () => {
     }
 
     jest
-      .spyOn(artifact, 'getArtifact')
+      .spyOn(artifact.default, 'getArtifact')
       .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
 
     jest
-      .spyOn(artifact, 'downloadArtifact')
+      .spyOn(artifact.default, 'downloadArtifact')
       .mockImplementation(() => Promise.resolve({digestMismatch: true}))
 
     await run()
@@ -237,7 +271,7 @@ describe('download', () => {
       [Inputs.ArtifactIds]: '456'
     })
 
-    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+    jest.spyOn(artifact.default, 'listArtifacts').mockImplementation(() =>
       Promise.resolve({
         artifacts: [mockArtifact]
       })
@@ -247,8 +281,8 @@ describe('download', () => {
 
     expect(core.info).toHaveBeenCalledWith('Downloading artifacts by ID')
     expect(core.debug).toHaveBeenCalledWith('Parsed artifact IDs: ["456"]')
-    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
-    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
       456,
       expect.objectContaining({
         expectedHash: mockArtifact.digest
@@ -270,7 +304,7 @@ describe('download', () => {
       [Inputs.ArtifactIds]: '123, 456, 789'
     })
 
-    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+    jest.spyOn(artifact.default, 'listArtifacts').mockImplementation(() =>
       Promise.resolve({
         artifacts: mockArtifacts
       })
@@ -282,9 +316,9 @@ describe('download', () => {
     expect(core.debug).toHaveBeenCalledWith(
       'Parsed artifact IDs: ["123","456","789"]'
     )
-    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(3)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(3)
     mockArtifacts.forEach(mockArtifact => {
-      expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
         mockArtifact.id,
         expect.objectContaining({
           expectedHash: mockArtifact.digest
@@ -305,7 +339,7 @@ describe('download', () => {
       [Inputs.ArtifactIds]: '123, 456, 789'
     })
 
-    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+    jest.spyOn(artifact.default, 'listArtifacts').mockImplementation(() =>
       Promise.resolve({
         artifacts: mockArtifacts
       })
@@ -317,7 +351,7 @@ describe('download', () => {
       'Could not find the following artifact IDs: 456, 789'
     )
     expect(core.debug).toHaveBeenCalledWith('Found 1 artifacts by ID')
-    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
   })
 
   test('throws error when no artifacts with requested IDs are found', async () => {
@@ -327,7 +361,7 @@ describe('download', () => {
       [Inputs.ArtifactIds]: '123, 456'
     })
 
-    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+    jest.spyOn(artifact.default, 'listArtifacts').mockImplementation(() =>
       Promise.resolve({
         artifacts: []
       })
@@ -389,7 +423,7 @@ describe('download', () => {
       [Inputs.Path]: testPath
     })
 
-    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+    jest.spyOn(artifact.default, 'listArtifacts').mockImplementation(() =>
       Promise.resolve({
         artifacts: [mockArtifact]
       })
@@ -398,12 +432,95 @@ describe('download', () => {
     await run()
 
     // Verify it downloads directly to the specified path (not nested in artifact name subdirectory)
-    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
       456,
       expect.objectContaining({
         path: path.resolve(testPath), // Should be the resolved path directly, not nested
         expectedHash: mockArtifact.digest
       })
+    )
+  })
+
+  test('passes skipDecompress option when skip-decompress input is true', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'artifact-name',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.SkipDecompress]: true
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    await run()
+
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      mockArtifact.id,
+      expect.objectContaining({
+        skipDecompress: true,
+        expectedHash: mockArtifact.digest
+      })
+    )
+  })
+
+  test('does not pass skipDecompress when skip-decompress input is false', async () => {
+    const mockArtifact = {
+      id: 123,
+      name: 'artifact-name',
+      size: 1024,
+      digest: 'abc123'
+    }
+
+    mockInputs({
+      [Inputs.SkipDecompress]: false
+    })
+
+    jest
+      .spyOn(artifact.default, 'getArtifact')
+      .mockImplementation(() => Promise.resolve({artifact: mockArtifact}))
+
+    await run()
+
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      mockArtifact.id,
+      expect.objectContaining({
+        skipDecompress: false,
+        expectedHash: mockArtifact.digest
+      })
+    )
+  })
+
+  test('passes skipDecompress for multiple artifact downloads', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.SkipDecompress]: true
+    })
+
+    const mockArtifacts = [
+      {id: 123, name: 'artifact1', size: 1024, digest: 'abc123'},
+      {id: 456, name: 'artifact2', size: 2048, digest: 'def456'}
+    ]
+
+    jest
+      .spyOn(artifact.default, 'listArtifacts')
+      .mockImplementation(() => Promise.resolve({artifacts: mockArtifacts}))
+
+    await run()
+
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(2)
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      123,
+      expect.objectContaining({skipDecompress: true})
+    )
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.objectContaining({skipDecompress: true})
     )
   })
 })

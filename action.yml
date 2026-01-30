@@ -35,6 +35,11 @@ inputs:
       If github-token is specified, this is the run that artifacts will be downloaded from.'
     required: false
     default: ${{ github.run_id }}
+  skip-decompress:
+    description: 'If true, the downloaded artifact will not be automatically extracted/decompressed.
+      This is useful when you want to handle the artifact as-is without extraction.'
+    required: false
+    default: 'false'
 outputs:
   download-path:
     description: 'Path of artifact download'
