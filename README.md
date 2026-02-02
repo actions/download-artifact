@@ -90,7 +90,7 @@ You are welcome to still raise bugs in this repo.
 ### Inputs
 
 ```yaml
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     # Name of the artifact to download.
     # If unspecified, all artifacts for the run are downloaded.
@@ -148,7 +148,7 @@ Download to current working directory (`$GITHUB_WORKSPACE`):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     name: my-artifact
 - name: Display structure of downloaded files
@@ -159,7 +159,7 @@ Download to a specific directory (also supports `~` expansion):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     name: my-artifact
     path: your/destination/dir
@@ -175,7 +175,7 @@ Download a single artifact by ID to the current working directory (`$GITHUB_WORK
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     artifact-ids: 12345
 - name: Display structure of downloaded files
@@ -186,7 +186,7 @@ Download a single artifact by ID to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     artifact-ids: 12345
     path: your/destination/dir
@@ -200,7 +200,7 @@ Multiple artifacts can be downloaded by providing a comma-separated list of IDs:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     artifact-ids: 12345,67890
     path: path/to/artifacts
@@ -228,7 +228,7 @@ Download all artifacts to the current working directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
 - name: Display structure of downloaded files
   run: ls -R
 ```
@@ -237,7 +237,7 @@ Download all artifacts to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     path: path/to/artifacts
 - name: Display structure of downloaded files
@@ -248,7 +248,7 @@ To download them to the _same_ directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     path: path/to/artifacts
     merge-multiple: true
@@ -279,7 +279,7 @@ jobs:
     - name: Create a File
       run: echo "hello from ${{ matrix.runs-on }}" > file-${{ matrix.runs-on }}.txt
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: my-artifact-${{ matrix.runs-on }}
         path: file-${{ matrix.runs-on }}.txt
@@ -288,7 +288,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download All Artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v7
       with:
         path: my-artifact
         pattern: my-artifact-*
@@ -311,7 +311,7 @@ It may be useful to download Artifacts from other workflow runs, or even other r
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v7
   with:
     name: my-other-artifact
     github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
@@ -332,7 +332,7 @@ If you must preserve permissions, you can `tar` all of your files together befor
   run: tar -cvf my_files.tar /path/to/my/directory
 
 - name: 'Upload Artifact'
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@v6
   with:
     name: my-artifact
     path: my_files.tar
