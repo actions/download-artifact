@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as path from 'path'
 import artifact, {ArtifactNotFoundError} from '@actions/artifact'
 import {run} from '../src/download-artifact'
 import {Inputs} from '../src/constants'
@@ -112,7 +113,7 @@ describe('download', () => {
     await run()
 
     expect(core.info).toHaveBeenCalledWith(
-      'No input name or pattern filtered specified, downloading all artifacts'
+      'No input name, artifact-ids or pattern filtered specified, downloading all artifacts'
     )
 
     expect(core.info).toHaveBeenCalledWith('Total of 2 artifact(s) downloaded')
@@ -219,6 +220,190 @@ describe('download', () => {
 
     expect(core.warning).toHaveBeenCalledWith(
       expect.stringContaining('digest validation failed')
+    )
+  })
+
+  test('downloads a single artifact by ID', async () => {
+    const mockArtifact = {
+      id: 456,
+      name: 'artifact-by-id',
+      size: 1024,
+      digest: 'def456'
+    }
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '456'
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: [mockArtifact]
+      })
+    )
+
+    await run()
+
+    expect(core.info).toHaveBeenCalledWith('Downloading artifacts by ID')
+    expect(core.debug).toHaveBeenCalledWith('Parsed artifact IDs: ["456"]')
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.objectContaining({
+        expectedHash: mockArtifact.digest
+      })
+    )
+    expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+  })
+
+  test('downloads multiple artifacts by ID', async () => {
+    const mockArtifacts = [
+      {id: 123, name: 'first-artifact', size: 1024, digest: 'abc123'},
+      {id: 456, name: 'second-artifact', size: 2048, digest: 'def456'},
+      {id: 789, name: 'third-artifact', size: 3072, digest: 'ghi789'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '123, 456, 789'
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: mockArtifacts
+      })
+    )
+
+    await run()
+
+    expect(core.info).toHaveBeenCalledWith('Downloading artifacts by ID')
+    expect(core.debug).toHaveBeenCalledWith(
+      'Parsed artifact IDs: ["123","456","789"]'
+    )
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(3)
+    mockArtifacts.forEach(mockArtifact => {
+      expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+        mockArtifact.id,
+        expect.objectContaining({
+          expectedHash: mockArtifact.digest
+        })
+      )
+    })
+    expect(core.info).toHaveBeenCalledWith('Total of 3 artifact(s) downloaded')
+  })
+
+  test('warns when some artifact IDs are not found', async () => {
+    const mockArtifacts = [
+      {id: 123, name: 'found-artifact', size: 1024, digest: 'abc123'}
+    ]
+
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '123, 456, 789'
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: mockArtifacts
+      })
+    )
+
+    await run()
+
+    expect(core.warning).toHaveBeenCalledWith(
+      'Could not find the following artifact IDs: 456, 789'
+    )
+    expect(core.debug).toHaveBeenCalledWith('Found 1 artifacts by ID')
+    expect(artifact.downloadArtifact).toHaveBeenCalledTimes(1)
+  })
+
+  test('throws error when no artifacts with requested IDs are found', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '123, 456'
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: []
+      })
+    )
+
+    await expect(run()).rejects.toThrow(
+      'None of the provided artifact IDs were found'
+    )
+  })
+
+  test('throws error when artifact-ids input is empty', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '  '
+    })
+
+    await expect(run()).rejects.toThrow(
+      "No valid artifact IDs provided in 'artifact-ids' input"
+    )
+  })
+
+  test('throws error when some artifact IDs are not valid numbers', async () => {
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '123, abc, 456'
+    })
+
+    await expect(run()).rejects.toThrow(
+      "Invalid artifact ID: 'abc'. Must be a number."
+    )
+  })
+
+  test('throws error when both name and artifact-ids are provided', async () => {
+    mockInputs({
+      [Inputs.Name]: 'some-artifact',
+      [Inputs.ArtifactIds]: '123'
+    })
+
+    await expect(run()).rejects.toThrow(
+      "Inputs 'name' and 'artifact-ids' cannot be used together. Please specify only one."
+    )
+  })
+
+  test('downloads single artifact by ID to same path as by name', async () => {
+    const mockArtifact = {
+      id: 456,
+      name: 'test-artifact',
+      size: 1024,
+      digest: 'def456'
+    }
+
+    const testPath = '/test/path'
+    mockInputs({
+      [Inputs.Name]: '',
+      [Inputs.Pattern]: '',
+      [Inputs.ArtifactIds]: '456',
+      [Inputs.Path]: testPath
+    })
+
+    jest.spyOn(artifact, 'listArtifacts').mockImplementation(() =>
+      Promise.resolve({
+        artifacts: [mockArtifact]
+      })
+    )
+
+    await run()
+
+    // Verify it downloads directly to the specified path (not nested in artifact name subdirectory)
+    expect(artifact.downloadArtifact).toHaveBeenCalledWith(
+      456,
+      expect.objectContaining({
+        path: path.resolve(testPath), // Should be the resolved path directly, not nested
+        expectedHash: mockArtifact.digest
+      })
     )
   })
 })
