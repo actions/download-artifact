@@ -8,7 +8,6 @@ on:
       - '**.md'
 
 jobs:
-
   build:
     name: Build
 
@@ -21,12 +20,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
-    - name: Set Node.js 12.x
-      uses: actions/setup-node@v1
+    - name: Setup Node 24
+      uses: actions/setup-node@v4
       with:
-        node-version: 12.x
+        node-version: 24.x
+        cache: 'npm'
 
     - name: npm install
       run: npm install
@@ -38,46 +38,55 @@ jobs:
       run: npm run lint
 
     - name: Format
-      run: npm run format-check 
+      run: npm run format-check
 
-    # Test end-to-end by uploading two artifacts and then downloading them
-    # Once upload-artifact v2 is out of preview, switch over
+    - name: Run Unit Tests
+      run: npm test
+
     - name: Create artifacts
       run: |
         mkdir -p path/to/artifact-A
         mkdir -p path/to/artifact-B
         echo "Lorem ipsum dolor sit amet" > path/to/artifact-A/file-A.txt
         echo "Hello world from file B" > path/to/artifact-B/file-B.txt
-    
+
     - name: Upload artifact A
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
-        name: 'Artifact-A'
+        name: Artifact-A-${{ matrix.runs-on }}
         path: path/to/artifact-A
 
     - name: Upload artifact B
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
-        name: 'Artifact-B'
+        name: Artifact-B-${{ matrix.runs-on }}
         path: path/to/artifact-B
 
     # Test downloading a single artifact
-    - name: Download artifact A
+    - name: Download artifact A (absolute path)
       uses: ./
       with:
-        name: 'Artifact-A'
+        name: Artifact-A-${{ matrix.runs-on }}
         path: some/new/path
+
+    # Test downloading an artifact using tilde expansion
+    - name: Download artifact A (tilde expansion)
+      uses: ./
+      with:
+        name: Artifact-A-${{ matrix.runs-on }}
+        path: ~/some/path/with/a/tilde
 
     - name: Verify successful download
       run: |
-        $file = "some/new/path/file-A.txt"
-        if(!(Test-Path -path $file))
+        $file1 = "some/new/path/file-A.txt"
+        $file2 = "~/some/path/with/a/tilde/file-A.txt"
+        if(!(Test-Path -path $file1) -or !(Test-Path -path $file2))
         {
-            Write-Error "Expected file does not exist"
+            Write-Error "Expected files do not exist"
         }
-        if(!((Get-Content $file) -ceq "Lorem ipsum dolor sit amet"))
+        if(!((Get-Content $file1) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $file2) -ceq "Lorem ipsum dolor sit amet"))
         {
-            Write-Error "File contents of downloaded artifact are incorrect"
+            Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
 
@@ -89,8 +98,8 @@ jobs:
 
     - name: Verify successful download
       run: |
-        $fileA = "some/other/path/Artifact-A/file-A.txt"
-        $fileB = "some/other/path/Artifact-B/file-B.txt"
+        $fileA = "some/other/path/Artifact-A-${{ matrix.runs-on }}/file-A.txt"
+        $fileB = "some/other/path/Artifact-B-${{ matrix.runs-on }}/file-B.txt"
         if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
         {
             Write-Error "Expected files do not exist"
@@ -101,4 +110,47 @@ jobs:
         }
       shell: pwsh
 
-      
+    # Test glob downloading both artifacts to same directory
+    - name: Download all Artifacts
+      uses: ./
+      with:
+        pattern: Artifact-*
+        path: single/directory
+        merge-multiple: true
+
+    - name: Verify successful download
+      run: |
+        $fileA = "single/directory/file-A.txt"
+        $fileB = "single/directory/file-B.txt"
+        if(!(Test-Path -path $fileA) -or !(Test-Path -path $fileB))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $fileA) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $fileB) -ceq "Hello world from file B"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    # Test downloading artifact without decompressing (skip-decompress)
+    - name: Download artifact A without decompressing
+      uses: ./
+      with:
+        name: Artifact-A-${{ matrix.runs-on }}
+        path: skip-decompress-test
+        skip-decompress: true
+
+    - name: Verify skip-decompress download
+      run: |
+        $rawFile = "skip-decompress-test/Artifact-A-${{ matrix.runs-on }}.zip"
+        if(!(Test-Path -path $rawFile))
+        {
+            Write-Error "Expected raw artifact file does not exist at $rawFile"
+        }
+        $fileInfo = Get-Item $rawFile
+        if($fileInfo.Length -eq 0)
+        {
+            Write-Error "Downloaded artifact file is empty"
+        }
+        Write-Host "Successfully downloaded artifact without decompressing: $rawFile (size: $($fileInfo.Length) bytes)"
+      shell: pwsh
