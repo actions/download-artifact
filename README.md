@@ -26,7 +26,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
 ## v7 - What's new
 
 > [!IMPORTANT]
-> actions/download-artifact@v8 now runs on Node.js 24 (`runs.using: node24`) and requires a minimum Actions Runner version of 2.327.1. If you are using self-hosted runners, ensure they are updated before upgrading.
+> actions/download-artifact@v7 now runs on Node.js 24 (`runs.using: node24`) and requires a minimum Actions Runner version of 2.327.1. If you are using self-hosted runners, ensure they are updated before upgrading.
 
 ### Node.js 24
 
