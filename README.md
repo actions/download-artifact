@@ -4,87 +4,22 @@ Download [Actions Artifacts](https://docs.github.com/en/actions/using-workflows/
 
 See also [upload-artifact](https://github.com/actions/upload-artifact).
 
-- [`@actions/download-artifact`](#actionsdownload-artifact)
-  - [v7 - What's new](#v7---whats-new)
-  - [v5 - What's new](#v5---whats-new)
-  - [v4 - What's new](#v4---whats-new)
-    - [Improvements](#improvements)
-    - [Breaking Changes](#breaking-changes)
-  - [Note](#note)
-  - [Usage](#usage)
-    - [Inputs](#inputs)
-    - [Outputs](#outputs)
-  - [Examples](#examples)
-    - [Download Single Artifact](#download-single-artifact)
-    - [Download Artifacts by ID](#download-artifacts-by-id)
-    - [Download All Artifacts](#download-all-artifacts)
-    - [Download multiple (filtered) Artifacts to the same directory](#download-multiple-filtered-artifacts-to-the-same-directory)
-    - [Download Artifacts from other Workflow Runs or Repositories](#download-artifacts-from-other-workflow-runs-or-repositories)
-  - [Limitations](#limitations)
-    - [Permission Loss](#permission-loss)
+- [What's new](#whats-new)
+- [Note](#note)
+- [Usage](#usage)
+  - [Inputs](#inputs)
+  - [Outputs](#outputs)
+- [Examples](#examples)
+  - [Download Single Artifact](#download-single-artifact)
+  - [Download Artifacts by ID](#download-artifacts-by-id)
+  - [Download All Artifacts](#download-all-artifacts)
+  - [Download multiple (filtered) Artifacts to the same directory](#download-multiple-filtered-artifacts-to-the-same-directory)
+  - [Download Artifacts from other Workflow Runs or Repositories](#download-artifacts-from-other-workflow-runs-or-repositories)
+  - [Maintaining File Permissions](#maintaining-file-permissions)
 
-## v8 - What's new
+## What's new
 
-> [!IMPORTANT]
-> actions/download-artifact@v8 has been migrated to an ESM module. This should be transparent to the caller but forks might need to make significant changes.
-
-> [!IMPORTANT]
-> Hash mismatches will now error by default. Users can override this behavior with a setting change (see below).
-
-- Downloads will check the content-type returned to determine if a file can be decompressed and skip the decompression stage if so. This removes previous failures where we were trying to decompress a non-zip file. Since this is making a big change to the default behavior, we're making it opt-in via a version bump.
-- Users can also download a zip file without decompressing it with the new `skip-decompress` flag.
-
-- Introduces a new parameter `digest-mismatch` that allows callers to specify what to do when the downloaded hash doesn't match the expected hash (`ignore`, `info`, `warn`, `error`). To ensure security by default, the default value is `error`.
-
-- Chore: we've bumped versions on a lot of our dev packages to get them up to date with the latest bugfixes/security patches.
-
-### v8.0.1
-
-- Support for CJK (Chinese/Japanese/Korean) characters in the file name.
-
-## v7 - What's new
-
-> [!IMPORTANT]
-> actions/download-artifact@v7 now runs on Node.js 24 (`runs.using: node24`) and requires a minimum Actions Runner version of 2.327.1. If you are using self-hosted runners, ensure they are updated before upgrading.
-
-### Node.js 24
-
-This release updates the runtime to Node.js 24. v6 had preliminary support for Node 24, however this action was by default still running on Node.js 20. Now this action by default will run on Node.js 24.
-
-## v5 - What's new
-
-Previously, **single artifact downloads** behaved differently depending on how you specified the artifact:
-
-- **By name**: `name: my-artifact` → extracted to `path/` (direct)
-- **By ID**: `artifact-ids: 12345` → extracted to `path/my-artifact/` (nested)
-
-Now both methods are consistent:
-
-- **By name**: `name: my-artifact` → extracted to `path/` (unchanged)
-- **By ID**: `artifact-ids: 12345` → extracted to `path/` (updated - now direct)
-
-Note: This change also applies to patterns that only match a single artifact.
-
-## v4 - What's new
-
-> [!IMPORTANT]
-> download-artifact@v4+ is not currently supported on GitHub Enterprise Server (GHES) yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3) (Node 16) or [v3-node20](https://github.com/actions/download-artifact/releases/tag/v3-node20) (Node 20).
-
-The release of upload-artifact@v4 and download-artifact@v4 are major changes to the backend architecture of Artifacts. They have numerous performance and behavioral improvements.
-
-For more information, see the [`@actions/artifact`](https://github.com/actions/toolkit/tree/main/packages/artifact) documentation.
-
-### Improvements
-
-1. Downloads are significantly faster, upwards of 90% improvement in worst case scenarios.
-2. Artifacts can be downloaded from other workflow runs and repositories when supplied with a PAT.
-
-### Breaking Changes
-
-1. On self hosted runners, additional [firewall rules](https://github.com/actions/toolkit/tree/main/packages/artifact#breaking-changes) may be required.
-2. Downloading artifacts that were created from `action/upload-artifact@v3` and below are not supported.
-
-For assistance with breaking changes, see [MIGRATION.md](docs/MIGRATION.md).
+Check out the [releases page](https://github.com/actions/download-artifact/releases) for details on what's new.
 
 ## Note
 
@@ -109,7 +44,7 @@ You are welcome to still raise bugs in this repo.
 ### Inputs
 
 ```yaml
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     # Name of the artifact to download.
     # If unspecified, all artifacts for the run are downloaded.
@@ -151,6 +86,17 @@ You are welcome to still raise bugs in this repo.
     # If github-token is specified, this is the run that artifacts will be downloaded from.
     # Optional. Default is ${{ github.run_id }}
     run-id:
+
+    # Whether to decompress a zip file.
+    # If true, the downloaded artifact will not be automatically extracted/decompressed.
+    # This is useful when you want to handle the artifact as-is without extraction.
+    # Optional. Default is `false`
+    skip-decompress:
+
+    # What to do if the action detects a mismatch between the downloaded hash and the expected hash from the server.
+    # Can be one of: `ignore`, `info`, `warn`, `error`
+    # Optional. Default is `error`
+    digest-mismatch:
 ```
 
 ### Outputs
@@ -167,7 +113,7 @@ Download to current working directory (`$GITHUB_WORKSPACE`):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     name: my-artifact
 - name: Display structure of downloaded files
@@ -178,12 +124,21 @@ Download to a specific directory (also supports `~` expansion):
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     name: my-artifact
     path: your/destination/dir
 - name: Display structure of downloaded files
   run: ls -R your/destination/dir
+```
+
+Directly download a non-zipped file (only supports files uploaded with `actions/upload-artifact@v7`):
+
+```yaml
+steps:
+- uses: actions/download-artifact@v8
+  with:
+    name: my-artifact.json # corresponds to the uploaded file name
 ```
 
 ### Download Artifacts by ID
@@ -194,7 +149,7 @@ Download a single artifact by ID to the current working directory (`$GITHUB_WORK
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     artifact-ids: 12345
 - name: Display structure of downloaded files
@@ -205,7 +160,7 @@ Download a single artifact by ID to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     artifact-ids: 12345
     path: your/destination/dir
@@ -219,7 +174,7 @@ Multiple artifacts can be downloaded by providing a comma-separated list of IDs:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     artifact-ids: 12345,67890
     path: path/to/artifacts
@@ -247,7 +202,7 @@ Download all artifacts to the current working directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
 - name: Display structure of downloaded files
   run: ls -R
 ```
@@ -256,7 +211,7 @@ Download all artifacts to a specific directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     path: path/to/artifacts
 - name: Display structure of downloaded files
@@ -267,7 +222,7 @@ To download them to the _same_ directory:
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     path: path/to/artifacts
     merge-multiple: true
@@ -307,7 +262,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download All Artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v8
       with:
         path: my-artifact
         pattern: my-artifact-*
@@ -330,7 +285,7 @@ It may be useful to download Artifacts from other workflow runs, or even other r
 
 ```yaml
 steps:
-- uses: actions/download-artifact@v5
+- uses: actions/download-artifact@v8
   with:
     name: my-other-artifact
     github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
@@ -338,21 +293,30 @@ steps:
     run-id: 1234
 ```
 
-## Limitations
+### Maintaining File Permissions
 
-### Permission Loss
+Zipping files will remove file permissions during artifact upload. All directories will have `755` and all files will have `644`. For example, if you make a file executable using `chmod` and then upload that file as a zip file, post-download the file is no longer guaranteed to be set as an executable.
 
-File permissions are not maintained during artifact upload. All directories will have `755` and all files will have `644`. For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
-
-If you must preserve permissions, you can `tar` all of your files together before artifact upload. Post download, the `tar` file will maintain file permissions and case sensitivity.
+If you must preserve permissions, you can `tar` all of your files together before artifact upload and upload it as a single file (using V7+ of `actions/upload-artifact`). Then download the file directly and unpack it manually:
 
 ```yaml
+
 - name: 'Tar files'
   run: tar -cvf my_files.tar /path/to/my/directory
 
 - name: 'Upload Artifact'
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@v7
   with:
-    name: my-artifact
     path: my_files.tar
+    archive: false
+
+----
+
+# Later, download the file by name
+
+- name: 'Download Artifact'
+  uses: actions/download-artifact@v8
+  with:
+    name: my_files.tar
+
 ```
