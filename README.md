@@ -38,6 +38,10 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
 
 - Chore: we've bumped versions on a lot of our dev packages to get them up to date with the latest bugfixes/security patches.
 
+### v8.0.1
+
+- Support for CJK (Chinese/Japanese/Korean) characters in the file name.
+
 ## v7 - What's new
 
 > [!IMPORTANT]
