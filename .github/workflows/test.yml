@@ -166,20 +166,20 @@ jobs:
         echo '{"key": "value"}' > path/to/extension-test/data.json
     - uses: actions/upload-artifact@v4 # V4 is important here to ensure we're supporting older versions correctly
       with:
-        name: report.txt-${{ matrix.runs-on }}
+        name: report.txt-${{ matrix.runs-on }}.json
         path: path/to/extension-test/data.json
 
     - name: Download misleading-extension artifact without decompressing
       uses: ./
       with:
-        name: report.txt-${{ matrix.runs-on }}
+        name: report.txt-${{ matrix.runs-on }}.json
         path: ext-test/raw
         skip-decompress: true
 
     - name: Verify downloaded file has .zip extension appended
       shell: bash
       run: |
-        expected="ext-test/raw/report.txt-${{ matrix.runs-on }}.zip"
+        expected="ext-test/raw/report.txt-${{ matrix.runs-on }}.json.zip"
         if [ -f "$expected" ]; then
           echo "PASS: Downloaded file has .zip appended: $expected"
         else
