@@ -143,7 +143,7 @@ steps:
 
 ### Download Artifacts by ID
 
-The `artifact-ids` input allows downloading artifacts using their unique ID rather than name. This is particularly useful when working with immutable artifacts from `actions/upload-artifact@v4` which assigns a unique ID to each artifact.
+The `artifact-ids` input allows downloading artifacts using their unique ID rather than name. This is particularly useful when working with immutable artifacts from `actions/upload-artifact@v4+` which assigns a unique ID to each artifact.
 
 Download a single artifact by ID to the current working directory (`$GITHUB_WORKSPACE`):
 
@@ -253,7 +253,7 @@ jobs:
     - name: Create a File
       run: echo "hello from ${{ matrix.runs-on }}" > file-${{ matrix.runs-on }}.txt
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: my-artifact-${{ matrix.runs-on }}
         path: file-${{ matrix.runs-on }}.txt
