@@ -164,7 +164,7 @@ jobs:
       run: |
         mkdir -p path/to/extension-test
         echo '{"key": "value"}' > path/to/extension-test/data.json
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v4 # V4 is important here to ensure we're supporting older versions correctly
       with:
         name: report.txt-${{ matrix.runs-on }}
         path: path/to/extension-test/data.json
