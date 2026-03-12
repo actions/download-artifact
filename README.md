@@ -91,7 +91,7 @@ You are welcome to still raise bugs in this repo.
     # Optional. Default is ${{ github.run_id }}
     run-id:
 
-    # Whether to decompress a zip file.
+    # Whether to skip decompressing a zip file (if detected).
     # If true, the downloaded artifact will not be automatically extracted/decompressed.
     # This is useful when you want to handle the artifact as-is without extraction.
     # Optional. Default is `false`
