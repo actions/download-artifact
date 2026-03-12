@@ -6,6 +6,7 @@ See also [upload-artifact](https://github.com/actions/upload-artifact).
 
 - [What's new](#whats-new)
 - [Note](#note)
+- [GHES Support](#ghes-support)
 - [Usage](#usage)
   - [Inputs](#inputs)
   - [Outputs](#outputs)
