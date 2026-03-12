@@ -136,7 +136,7 @@ steps:
   run: ls -R your/destination/dir
 ```
 
-Directly download a non-zipped file (only supports files uploaded with `actions/upload-artifact@v7`):
+Directly download a non-zipped file (only supports files uploaded with `actions/upload-artifact@v7` and `archive: false` set):
 
 ```yaml
 steps:
