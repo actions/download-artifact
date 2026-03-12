@@ -39,6 +39,10 @@ We will still provide security updates for this project and fix major breaking c
 
 You are welcome to still raise bugs in this repo.
 
+## GHES Support
+
+`download-artifact@v4+` is not currently supported on GitHub Enterprise Server (GHES) yet. If you are on GHES, you must use [v3](https://github.com/actions/download-artifact/releases/tag/v3) (Node 16) or [v3-node20](https://github.com/actions/download-artifact/releases/tag/v3-node20) (Node 20).
+
 ## Usage
 
 ### Inputs
