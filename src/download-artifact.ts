@@ -242,6 +242,7 @@ export async function run(): Promise<void> {
   }
 
   core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
+  core.setOutput(Outputs.ArtifactsDownloaded, artifacts.length)
   core.setOutput(Outputs.DownloadPath, resolvedPath)
   core.info('Download artifact has finished successfully')
 }

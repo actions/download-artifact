@@ -19,5 +19,6 @@ export enum DigestMismatchBehavior {
 }
 
 export enum Outputs {
+  ArtifactsDownloaded = 'artifacts-downloaded',
   DownloadPath = 'download-path'
 }

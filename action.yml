@@ -46,6 +46,8 @@ inputs:
     required: false
     default: 'error'
 outputs:
+  artifacts-downloaded:
+    description: 'The number of artifacts downloaded'
   download-path:
     description: 'Path of artifact download'
 runs:

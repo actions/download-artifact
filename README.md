@@ -108,6 +108,7 @@ You are welcome to still raise bugs in this repo.
 
 | Name | Description | Example |
 | - | - | - |
+| `artifacts-downloaded` | The number of artifacts downloaded | `1` |
 | `download-path` | Absolute path where the artifact(s) were downloaded | `/tmp/my/download/path` |
 
 ## Examples
