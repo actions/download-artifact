@@ -112,6 +112,8 @@ describe('download', () => {
     )
     expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
 
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 1)
+
     expect(core.setOutput).toHaveBeenCalledWith(
       'download-path',
       expect.any(String)
@@ -151,6 +153,7 @@ describe('download', () => {
     )
 
     expect(core.info).toHaveBeenCalledWith('Total of 2 artifact(s) downloaded')
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 2)
     expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(2)
   })
 
@@ -169,6 +172,8 @@ describe('download', () => {
     )
 
     expect(core.info).toHaveBeenCalledWith('Total of 0 artifact(s) downloaded')
+
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 0)
   })
 
   test('filters artifacts by pattern', async () => {
@@ -193,6 +198,7 @@ describe('download', () => {
       123,
       expect.anything()
     )
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 1)
   })
 
   test('uses token and repository information when provided', async () => {
@@ -335,6 +341,7 @@ describe('download', () => {
       expect.stringContaining('digest validation failed')
     )
     expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 1)
   })
 
   test('downloads a single artifact by ID', async () => {
@@ -369,6 +376,7 @@ describe('download', () => {
       })
     )
     expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 1)
   })
 
   test('downloads multiple artifacts by ID', async () => {
@@ -406,6 +414,7 @@ describe('download', () => {
       )
     })
     expect(core.info).toHaveBeenCalledWith('Total of 3 artifact(s) downloaded')
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 3)
   })
 
   test('warns when some artifact IDs are not found', async () => {
@@ -432,6 +441,7 @@ describe('download', () => {
     )
     expect(core.debug).toHaveBeenCalledWith('Found 1 artifacts by ID')
     expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(core.setOutput).toHaveBeenCalledWith('artifacts-downloaded', 1)
   })
 
   test('throws error when no artifacts with requested IDs are found', async () => {
