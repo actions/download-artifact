@@ -608,6 +608,9 @@ describe('download', () => {
           if (callCount === 3) {
             throw new Error('simulated download failure')
           }
+          if (callCount > 5) {
+            throw new Error('simulated later-chunk failure')
+          }
           return {digestMismatch: false}
         })
 
