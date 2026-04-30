@@ -600,26 +600,29 @@ describe('download', () => {
     const onUnhandled = (reason: Error) => unhandledRejections.push(reason)
     process.on('unhandledRejection', onUnhandled)
 
-    jest
-      .spyOn(artifact.default, 'downloadArtifact')
-      .mockImplementation(async () => {
-        callCount++
-        if (callCount === 3) {
-          throw new Error('simulated download failure')
-        }
-        return {digestMismatch: false}
-      })
+    try {
+      jest
+        .spyOn(artifact.default, 'downloadArtifact')
+        .mockImplementation(async () => {
+          callCount++
+          if (callCount === 3) {
+            throw new Error('simulated download failure')
+          }
+          return {digestMismatch: false}
+        })
 
-    await expect(run()).rejects.toThrow('simulated download failure')
+      await expect(run()).rejects.toThrow('simulated download failure')
 
-    // Give any stray promises a chance to settle
-    await new Promise(resolve => setTimeout(resolve, 50))
-    process.off('unhandledRejection', onUnhandled)
+      // Flush the next event-loop turn so any stray promise rejections surface
+      await new Promise<void>(resolve => setImmediate(resolve))
 
-    expect(unhandledRejections).toHaveLength(0)
-    // Only the first chunk (5 artifacts) should have been started; the second
-    // chunk's downloads must never be initiated.
-    expect(callCount).toBeLessThanOrEqual(5)
+      expect(unhandledRejections).toHaveLength(0)
+      // Only the first chunk (5 artifacts) should have been started; the second
+      // chunk's downloads must never be initiated.
+      expect(callCount).toBeLessThanOrEqual(5)
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+    }
   })
 
   test('passes skipDecompress for multiple artifact downloads', async () => {
