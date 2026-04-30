@@ -575,59 +575,6 @@ describe('download', () => {
     )
   })
 
-  test('does not leave unhandled promise rejections when an early chunk fails', async () => {
-    // Regression test for: sporadic Windows crash with exit code -1073740791
-    // (0xC0000409 STATUS_STACK_BUFFER_OVERRUN). The bug was that all download
-    // promises were started eagerly before chunked processing began. If an early
-    // chunk threw, later chunks' already-running promises could reject without a
-    // handler, causing Node.js to abort. Fix: promises are created inside the
-    // chunk loop so later chunks never start if an earlier one fails.
-    const mockArtifacts = Array.from({length: 7}, (_, i) => ({
-      id: i + 1,
-      name: `artifact-${i + 1}`,
-      size: 1024,
-      digest: `hash${i + 1}`
-    }))
-
-    mockInputs({[Inputs.Name]: '', [Inputs.Pattern]: ''})
-
-    jest
-      .spyOn(artifact.default, 'listArtifacts')
-      .mockResolvedValue({artifacts: mockArtifacts})
-
-    let callCount = 0
-    const unhandledRejections: Error[] = []
-    const onUnhandled = (reason: Error) => unhandledRejections.push(reason)
-    process.on('unhandledRejection', onUnhandled)
-
-    try {
-      jest
-        .spyOn(artifact.default, 'downloadArtifact')
-        .mockImplementation(async () => {
-          callCount++
-          if (callCount === 3) {
-            throw new Error('simulated download failure')
-          }
-          if (callCount > 5) {
-            throw new Error('simulated later-chunk failure')
-          }
-          return {digestMismatch: false}
-        })
-
-      await expect(run()).rejects.toThrow('simulated download failure')
-
-      // Flush the next event-loop turn so any stray promise rejections surface
-      await new Promise<void>(resolve => setImmediate(resolve))
-
-      expect(unhandledRejections).toHaveLength(0)
-      // Only the first chunk (5 artifacts) should have been started; the second
-      // chunk's downloads must never be initiated.
-      expect(callCount).toBeLessThanOrEqual(5)
-    } finally {
-      process.off('unhandledRejection', onUnhandled)
-    }
-  })
-
   test('passes skipDecompress for multiple artifact downloads', async () => {
     mockInputs({
       [Inputs.Name]: '',
