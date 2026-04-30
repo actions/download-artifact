@@ -182,31 +182,35 @@ export async function run(): Promise<void> {
     })
   }
 
-  const downloadPromises = artifacts.map(artifact => ({
-    name: artifact.name,
-    promise: artifactClient.downloadArtifact(artifact.id, {
-      ...options,
-      path:
-        isSingleArtifactDownload ||
-        inputs.mergeMultiple ||
-        artifacts.length === 1
-          ? resolvedPath
-          : path.join(resolvedPath, artifact.name),
-      expectedHash: artifact.digest,
-      skipDecompress: inputs.skipDecompress
-    })
-  }))
-
-  const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
+  const chunkedArtifacts = chunk(artifacts, PARALLEL_DOWNLOADS)
   const digestMismatches: string[] = []
 
-  for (const chunk of chunkedPromises) {
-    const chunkPromises = chunk.map(item => item.promise)
-    const results = await Promise.all(chunkPromises)
+  for (const artifactChunk of chunkedArtifacts) {
+    // Promises are created here, inside the loop, so that if a previous chunk
+    // fails the downloads for subsequent chunks are never started. Starting all
+    // promises up-front and then chunking them causes the un-awaited promises to
+    // reject without a handler, which crashes Node.js on Windows with exit code
+    // 0xC0000409 (STATUS_STACK_BUFFER_OVERRUN).
+    const chunkItems = artifactChunk.map(artifact => ({
+      name: artifact.name,
+      promise: artifactClient.downloadArtifact(artifact.id, {
+        ...options,
+        path:
+          isSingleArtifactDownload ||
+          inputs.mergeMultiple ||
+          artifacts.length === 1
+            ? resolvedPath
+            : path.join(resolvedPath, artifact.name),
+        expectedHash: artifact.digest,
+        skipDecompress: inputs.skipDecompress
+      })
+    }))
+
+    const results = await Promise.all(chunkItems.map(item => item.promise))
 
     for (let i = 0; i < results.length; i++) {
       const outcome = results[i]
-      const artifactName = chunk[i].name
+      const artifactName = chunkItems[i].name
 
       if (outcome.digestMismatch) {
         digestMismatches.push(artifactName)
