@@ -6,7 +6,16 @@ export enum Inputs {
   RunID = 'run-id',
   Pattern = 'pattern',
   MergeMultiple = 'merge-multiple',
-  ArtifactIds = 'artifact-ids'
+  ArtifactIds = 'artifact-ids',
+  SkipDecompress = 'skip-decompress',
+  DigestMismatch = 'digest-mismatch'
+}
+
+export enum DigestMismatchBehavior {
+  Ignore = 'ignore',
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error'
 }
 
 export enum Outputs {
