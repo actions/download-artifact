@@ -42,7 +42,8 @@ jest.unstable_mockModule('@actions/core', () => ({
 // Dynamic imports after mocking
 const core = await import('@actions/core')
 const artifact = await import('@actions/artifact')
-const {run} = await import('../src/download-artifact.js')
+const {run, describeDownloadFailure} =
+  await import('../src/download-artifact.js')
 const {Inputs} = await import('../src/constants.js')
 const {ArtifactNotFoundError} = artifact
 
@@ -602,5 +603,38 @@ describe('download', () => {
       456,
       expect.objectContaining({skipDecompress: true})
     )
+  })
+})
+
+describe('describeDownloadFailure', () => {
+  test('adds a permission hint for the API permission error', () => {
+    const message = describeDownloadFailure(
+      'Resource not accessible by integration'
+    )
+
+    expect(message).toContain('Unable to download artifact(s)')
+    expect(message).toContain('actions: read')
+    expect(message).toContain('permissions:')
+  })
+
+  test('matches the error regardless of casing', () => {
+    expect(
+      describeDownloadFailure('resource NOT accessible by integration')
+    ).toContain('actions: read')
+  })
+
+  test('leaves an unrelated error untouched', () => {
+    const message = describeDownloadFailure("Artifact 'build' not found")
+
+    expect(message).toBe(
+      "Unable to download artifact(s): Artifact 'build' not found"
+    )
+    expect(message).not.toContain('actions: read')
+  })
+
+  test('does not add the hint to a permission error about something else', () => {
+    const message = describeDownloadFailure('Resource not found')
+
+    expect(message).not.toContain('actions: read')
   })
 })
