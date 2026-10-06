@@ -77339,7 +77339,7 @@ module.exports = index;
 /***/ 2822:
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"name":"@actions/artifact","version":"6.2.1","preview":true,"description":"Actions artifact lib","keywords":["github","actions","artifact"],"homepage":"https://github.com/actions/toolkit/tree/main/packages/artifact","license":"MIT","type":"module","main":"lib/artifact.js","types":"lib/artifact.d.ts","exports":{".":{"types":"./lib/artifact.d.ts","import":"./lib/artifact.js"}},"directories":{"lib":"lib","test":"__tests__"},"files":["lib","!.DS_Store"],"publishConfig":{"access":"public"},"repository":{"type":"git","url":"git+https://github.com/actions/toolkit.git","directory":"packages/artifact"},"scripts":{"audit-moderate":"npm install && npm audit --json --audit-level=moderate > audit.json","test":"cd ../../ && npm run test ./packages/artifact","bootstrap":"cd ../../ && npm run bootstrap","tsc-run":"tsc && cp src/internal/shared/package-version.cjs lib/internal/shared/","tsc":"npm run bootstrap && npm run tsc-run","gen:docs":"typedoc --plugin typedoc-plugin-markdown --out docs/generated src/artifact.ts --githubPages false --readme none"},"bugs":{"url":"https://github.com/actions/toolkit/issues"},"dependencies":{"@actions/core":"^3.0.0","@actions/github":"^9.0.0","@actions/http-client":"^4.0.0","@azure/storage-blob":"^12.30.0","@octokit/core":"^7.0.6","@octokit/plugin-request-log":"^6.0.0","@octokit/plugin-retry":"^8.0.0","@octokit/request":"^10.0.7","@octokit/request-error":"^7.1.0","@protobuf-ts/plugin":"^2.2.3-alpha.1","@protobuf-ts/runtime":"^2.9.4","archiver":"^7.0.1","jwt-decode":"^4.0.0","unzip-stream":"^0.3.1"},"devDependencies":{"@types/archiver":"^7.0.0","@types/unzip-stream":"^0.3.4","typedoc":"^0.28.16","typedoc-plugin-markdown":"^4.9.0","typescript":"^5.9.3"},"overrides":{"uri-js":"npm:uri-js-replace@^1.0.1","node-fetch":"^3.3.2"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"@actions/artifact","version":"6.3.1","preview":true,"description":"Actions artifact lib","keywords":["github","actions","artifact"],"homepage":"https://github.com/actions/toolkit/tree/main/packages/artifact","license":"MIT","type":"module","main":"lib/artifact.js","types":"lib/artifact.d.ts","exports":{".":{"types":"./lib/artifact.d.ts","import":"./lib/artifact.js"}},"directories":{"lib":"lib","test":"__tests__"},"files":["lib","!.DS_Store"],"publishConfig":{"access":"public"},"repository":{"type":"git","url":"git+https://github.com/actions/toolkit.git","directory":"packages/artifact"},"scripts":{"audit-moderate":"npm install && npm audit --json --audit-level=moderate > audit.json","test":"cd ../../ && npm run test ./packages/artifact","bootstrap":"cd ../../ && npm run bootstrap","tsc-run":"tsc && cp src/internal/shared/package-version.cjs lib/internal/shared/","tsc":"npm run bootstrap && npm run tsc-run","gen:docs":"typedoc --plugin typedoc-plugin-markdown --out docs/generated src/artifact.ts --githubPages false --readme none"},"bugs":{"url":"https://github.com/actions/toolkit/issues"},"dependencies":{"@actions/core":"^3.0.1","@actions/github":"^9.1.1","@actions/http-client":"^4.0.1","@azure/storage-blob":"^12.31.0","@octokit/core":"^7.0.6","@octokit/plugin-request-log":"^6.0.0","@octokit/plugin-retry":"^8.1.0","@octokit/request":"^10.0.8","@octokit/request-error":"^7.1.0","@protobuf-ts/runtime":"^2.11.1","@protobuf-ts/runtime-rpc":"^2.11.1","archiver":"^7.0.1","jwt-decode":"^4.0.0","unzip-stream":"^0.3.1"},"devDependencies":{"@protobuf-ts/plugin":"^2.11.1","@types/archiver":"^7.0.0","@types/unzip-stream":"^0.3.4","typedoc":"^0.28.19","typedoc-plugin-markdown":"^4.11.0","typescript":"^5.9.3"},"overrides":{"uri-js":"npm:uri-js-replace@^1.0.1","node-fetch":"^3.3.2"}}');
 
 /***/ })
 
@@ -82601,8 +82601,9 @@ var artifact_twirp_client_awaiter = (undefined && undefined.__awaiter) || functi
 class ArtifactHttpClient {
     constructor(userAgent, maxAttempts, baseRetryIntervalMilliseconds, retryMultiplier) {
         this.maxAttempts = 5;
-        this.baseRetryIntervalMilliseconds = 3000;
+        this.baseRetryIntervalMilliseconds = 8000;
         this.retryMultiplier = 1.5;
+        this.retryTimeoutMilliseconds = 120000;
         const token = getRuntimeToken();
         this.baseUrl = getResultsServiceUrl();
         if (maxAttempts) {
@@ -82641,11 +82642,16 @@ class ArtifactHttpClient {
             let attempt = 0;
             let errorMessage = '';
             let rawBody = '';
+            let totalRetryWaitMilliseconds = 0;
             while (attempt < this.maxAttempts) {
                 let isRetryable = false;
+                let retryAfterSeconds;
                 try {
                     const response = yield operation();
                     const statusCode = response.message.statusCode;
+                    if (statusCode === HttpCodes.TooManyRequests) {
+                        retryAfterSeconds = this.getRetryAfterSeconds(response);
+                    }
                     rawBody = yield response.readBody();
                     core_debug(`[Response] - ${response.message.statusCode}`);
                     core_debug(`Headers: ${JSON.stringify(response.message.headers, null, 2)}`);
@@ -82683,9 +82689,16 @@ class ArtifactHttpClient {
                 if (attempt + 1 === this.maxAttempts) {
                     throw new Error(`Failed to make request after ${this.maxAttempts} attempts: ${errorMessage}`);
                 }
-                const retryTimeMilliseconds = this.getExponentialRetryTimeMilliseconds(attempt);
+                const retryTimeMilliseconds = retryAfterSeconds !== undefined
+                    ? retryAfterSeconds * 1000
+                    : this.getExponentialRetryTimeMilliseconds(attempt);
+                if (totalRetryWaitMilliseconds + retryTimeMilliseconds >
+                    this.retryTimeoutMilliseconds) {
+                    throw new Error(`Retry wait of ${retryTimeMilliseconds} ms would exceed the maximum total retry wait of ${this.retryTimeoutMilliseconds} ms: ${errorMessage}`);
+                }
                 info(`Attempt ${attempt + 1} of ${this.maxAttempts} failed with error: ${errorMessage}. Retrying request in ${retryTimeMilliseconds} ms...`);
                 yield this.sleep(retryTimeMilliseconds);
+                totalRetryWaitMilliseconds += retryTimeMilliseconds;
                 attempt++;
             }
             throw new Error(`Request failed`);
@@ -82707,6 +82720,17 @@ class ArtifactHttpClient {
             HttpCodes.TooManyRequests
         ];
         return retryableStatusCodes.includes(statusCode);
+    }
+    // Only positive integer seconds are supported, not HTTP-date values.
+    getRetryAfterSeconds(response) {
+        var _a;
+        const header = response.message.headers['retry-after'];
+        const value = (_a = (Array.isArray(header) ? header[0] : header)) === null || _a === void 0 ? void 0 : _a.trim();
+        if (value === undefined || !/^\d+$/.test(value)) {
+            return undefined;
+        }
+        const parsed = parseInt(value, 10);
+        return !isNaN(parsed) && parsed > 0 ? parsed : undefined;
     }
     sleep(milliseconds) {
         return artifact_twirp_client_awaiter(this, void 0, void 0, function* () {
@@ -95881,14 +95905,11 @@ class UserDelegationKeyCredential {
 
 
 
-
-
-
 //# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: ./node_modules/@azure/storage-blob/dist/esm/utils/constants.js
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const esm_utils_constants_SDK_VERSION = "12.30.0";
+const esm_utils_constants_SDK_VERSION = "12.31.0";
 const SERVICE_VERSION = "2026-02-06";
 const BLOCK_BLOB_MAX_UPLOAD_BLOB_BYTES = 256 * 1024 * 1024; // 256MB
 const BLOCK_BLOB_MAX_STAGE_BLOCK_BYTES = 4000 * 1024 * 1024; // 4000MB
@@ -116080,7 +116101,7 @@ class BlobClient extends StorageClient_StorageClient {
         options.conditions = options.conditions || {};
         ensureCpkIfSpecified(options.customerProvidedKey, this.isHttps);
         return tracingClient.withSpan("BlobClient-download", options, async (updatedOptions) => {
-            const res = utils_common_assertResponse(await this.blobContext.download({
+            const res = utils_common_assertResponse((await this.blobContext.download({
                 abortSignal: options.abortSignal,
                 leaseAccessConditions: options.conditions,
                 modifiedAccessConditions: {
@@ -116096,7 +116117,7 @@ class BlobClient extends StorageClient_StorageClient {
                 snapshot: options.snapshot,
                 cpkInfo: options.customerProvidedKey,
                 tracingOptions: updatedOptions.tracingOptions,
-            }));
+            })));
             const wrappedRes = {
                 ...res,
                 _response: res._response, // _response is made non-enumerable
@@ -117418,7 +117439,7 @@ class BlockBlobClient extends BlobClient {
             throw new Error("This operation currently is only supported in Node.js.");
         }
         return tracingClient.withSpan("BlockBlobClient-query", options, async (updatedOptions) => {
-            const response = utils_common_assertResponse(await this._blobContext.query({
+            const response = utils_common_assertResponse((await this._blobContext.query({
                 abortSignal: options.abortSignal,
                 queryRequest: {
                     queryType: "SQL",
@@ -117433,7 +117454,7 @@ class BlockBlobClient extends BlobClient {
                 },
                 cpkInfo: options.customerProvidedKey,
                 tracingOptions: updatedOptions.tracingOptions,
-            }));
+            })));
             return new BlobQueryResponse(response, {
                 abortSignal: options.abortSignal,
                 onProgress: options.onProgress,
@@ -119329,9 +119350,9 @@ class BlobBatchClient {
         return tracingClient.withSpan("BlobBatchClient-submitBatch", options, async (updatedOptions) => {
             const batchRequestBody = batchRequest.getHttpRequestBody();
             // ServiceSubmitBatchResponseModel and ContainerSubmitBatchResponse are compatible for now.
-            const rawBatchResponse = utils_common_assertResponse(await this.serviceOrContainerContext.submitBatch(utf8ByteLength(batchRequestBody), batchRequest.getMultiPartContentType(), batchRequestBody, {
+            const rawBatchResponse = utils_common_assertResponse((await this.serviceOrContainerContext.submitBatch(utf8ByteLength(batchRequestBody), batchRequest.getMultiPartContentType(), batchRequestBody, {
                 ...updatedOptions,
-            }));
+            })));
             // Parse the sub responses result, if logic reaches here(i.e. the batch request succeeded with status code 202).
             const batchResponseParser = new BatchResponseParser(rawBatchResponse, batchRequest.getSubRequests());
             const responseSummary = await batchResponseParser.parseBatchResponse();
@@ -122354,6 +122375,19 @@ function getProxyFetch(destinationUrl) {
 function getApiBaseUrl() {
     return process.env['GITHUB_API_URL'] || 'https://api.github.com';
 }
+function getUserAgentWithOrchestrationId(baseUserAgent) {
+    var _a;
+    const orchId = (_a = process.env['ACTIONS_ORCHESTRATION_ID']) === null || _a === void 0 ? void 0 : _a.trim();
+    if (orchId) {
+        const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, '_');
+        const tag = `actions_orchestration_id/${sanitizedId}`;
+        if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag))
+            return baseUserAgent;
+        const ua = baseUserAgent ? `${baseUserAgent} ` : '';
+        return `${ua}${tag}`;
+    }
+    return baseUserAgent;
+}
 //# sourceMappingURL=utils.js.map
 ;// CONCATENATED MODULE: ./node_modules/universal-user-agent/index.js
 function getUserAgent() {
@@ -122674,7 +122708,7 @@ function isKeyOperator(operator) {
 function getValues(context, operator, key, modifier) {
   var value = context[key], result = [];
   if (isDefined(value) && value !== "") {
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "bigint" || typeof value === "boolean") {
       value = value.toString();
       if (modifier && modifier !== "*") {
         value = value.substring(0, parseInt(modifier, 10));
@@ -122863,6 +122897,147 @@ var endpoint = withDefaults(null, DEFAULTS);
 
 // EXTERNAL MODULE: ./node_modules/fast-content-type-parse/index.js
 var fast_content_type_parse = __nccwpck_require__(1120);
+;// CONCATENATED MODULE: ./node_modules/json-with-bigint/json-with-bigint.js
+const noiseValue = /^-?\d+n+$/; // Noise - strings that match the custom format before being converted to it
+const originalStringify = JSON.stringify;
+const originalParse = JSON.parse;
+
+/*
+  Function to serialize value to a JSON string.
+  Converts BigInt values to a custom format (strings with digits and "n" at the end) and then converts them to proper big integers in a JSON string.
+*/
+const JSONStringify = (value, replacer, space) => {
+  if ("rawJSON" in JSON) {
+    return originalStringify(
+      value,
+      (key, value) => {
+        if (typeof value === "bigint") return JSON.rawJSON(value.toString());
+
+        if (typeof replacer === "function") return replacer(key, value);
+
+        if (Array.isArray(replacer) && replacer.includes(key)) return value;
+
+        return value;
+      },
+      space
+    );
+  }
+
+  if (!value) return originalStringify(value, replacer, space);
+
+  const bigInts = /([\[:])?"(-?\d+)n"($|([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
+  const noise = /([\[:])?("-?\d+n+)n("$|"([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
+  const convertedToCustomJSON = originalStringify(
+    value,
+    (key, value) => {
+      const isNoise =
+        typeof value === "string" && Boolean(value.match(noiseValue));
+
+      if (isNoise) return value.toString() + "n"; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
+
+      if (typeof value === "bigint") return value.toString() + "n";
+
+      if (typeof replacer === "function") return replacer(key, value);
+
+      if (Array.isArray(replacer) && replacer.includes(key)) return value;
+
+      return value;
+    },
+    space
+  );
+  const processedJSON = convertedToCustomJSON.replace(bigInts, "$1$2$3"); // Delete one "n" off the end of every BigInt value
+  const denoisedJSON = processedJSON.replace(noise, "$1$2$3"); // Remove one "n" off the end of every noisy string
+
+  return denoisedJSON;
+};
+
+/*
+  Function to check if the JSON.parse's context.source feature is supported.
+*/
+const isContextSourceSupported = () =>
+  JSON.parse("1", (_, __, context) => !!context && context.source === "1");
+
+/*
+  Faster (2x) and simpler function to parse JSON.
+  Based on JSON.parse's context.source feature, which is not universally available now.
+  Does not support the legacy custom format, used in the first version of this library.
+*/
+const JSONParseV2 = (text, reviver) => {
+  const intRegex = /^-?\d+$/;
+
+  return JSON.parse(text, (key, value, context) => {
+    const isBigNumber =
+      typeof value === "number" &&
+      (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER);
+    const isInt = intRegex.test(context.source);
+    const isBigInt = isBigNumber && isInt;
+
+    if (isBigInt) return BigInt(context.source);
+
+    if (typeof reviver !== "function") return value;
+
+    return reviver(key, value, context);
+  });
+};
+
+/*
+  Function to parse JSON.
+  If JSON has number values greater than Number.MAX_SAFE_INTEGER, we convert those values to a custom format, then parse them to BigInt values.
+  Other types of values are not affected and parsed as native JSON.parse() would parse them.
+*/
+const JSONParse = (text, reviver) => {
+  if (!text) return originalParse(text, reviver);
+
+  if (isContextSourceSupported()) return JSONParseV2(text, reviver); // Shortcut to a faster (2x) and simpler version
+
+  const MAX_INT = Number.MAX_SAFE_INTEGER.toString();
+  const MAX_DIGITS = MAX_INT.length;
+  const stringsOrLargeNumbers =
+    /"(?:\\.|[^"])*"|-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/g;
+  const noiseValueWithQuotes = /^"-?\d+n+"$/; // Noise - strings that match the custom format before being converted to it
+  const customFormat = /^-?\d+n$/;
+
+  // Find and mark big numbers with "n"
+  const serializedData = text.replace(
+    stringsOrLargeNumbers,
+    (text, digits, fractional, exponential) => {
+      const isString = text[0] === '"';
+      const isNoise = isString && Boolean(text.match(noiseValueWithQuotes));
+
+      if (isNoise) return text.substring(0, text.length - 1) + 'n"'; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
+
+      const isFractionalOrExponential = fractional || exponential;
+      const isLessThanMaxSafeInt =
+        digits &&
+        (digits.length < MAX_DIGITS ||
+          (digits.length === MAX_DIGITS && digits <= MAX_INT)); // With a fixed number of digits, we can correctly use lexicographical comparison to do a numeric comparison
+
+      if (isString || isFractionalOrExponential || isLessThanMaxSafeInt)
+        return text;
+
+      return '"' + text + 'n"';
+    }
+  );
+
+  // Convert marked big numbers to BigInt
+  return originalParse(serializedData, (key, value, context) => {
+    const isCustomFormatBigInt =
+      typeof value === "string" && Boolean(value.match(customFormat));
+
+    if (isCustomFormatBigInt)
+      return BigInt(value.substring(0, value.length - 1));
+
+    const isNoiseValue =
+      typeof value === "string" && Boolean(value.match(noiseValue));
+
+    if (isNoiseValue) return value.substring(0, value.length - 1); // Remove one "n" off the end of the noisy string
+
+    if (typeof reviver !== "function") return value;
+
+    return reviver(key, value, context);
+  });
+};
+
 ;// CONCATENATED MODULE: ./node_modules/@octokit/request-error/dist-src/index.js
 class RequestError extends Error {
   name;
@@ -122912,7 +123087,7 @@ class RequestError extends Error {
 
 
 // pkg/dist-src/version.js
-var dist_bundle_VERSION = "10.0.7";
+var dist_bundle_VERSION = "10.0.8";
 
 // pkg/dist-src/defaults.js
 var defaults_default = {
@@ -122922,6 +123097,7 @@ var defaults_default = {
 };
 
 // pkg/dist-src/fetch-wrapper.js
+
 
 
 // pkg/dist-src/is-plain-object.js
@@ -122946,7 +123122,7 @@ async function fetchWrapper(requestOptions) {
   }
   const log = requestOptions.request?.log || console;
   const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
-  const body = dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const body = dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSONStringify(requestOptions.body) : requestOptions.body;
   const requestHeaders = Object.fromEntries(
     Object.entries(requestOptions.headers).map(([name, value]) => [
       name,
@@ -123045,7 +123221,7 @@ async function getResponseData(response) {
     let text = "";
     try {
       text = await response.text();
-      return JSON.parse(text);
+      return JSONParse(text);
     } catch (err) {
       return text;
     }
@@ -126308,6 +126484,7 @@ const defaults = {
     }
 };
 const GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
+
 /**
  * Convience function to correctly format Octokit Options to pass into the constructor.
  *
@@ -126320,6 +126497,11 @@ function getOctokitOptions(token, options) {
     const auth = getAuthString(token, opts);
     if (auth) {
         opts.auth = auth;
+    }
+    // Orchestration ID
+    const userAgent = getUserAgentWithOrchestrationId(opts.userAgent);
+    if (userAgent) {
+        opts.userAgent = userAgent;
     }
     return opts;
 }
@@ -126641,8 +126823,11 @@ var light = __nccwpck_require__(3251);
 var plugin_retry_dist_bundle_VERSION = "0.0.0-development";
 
 // pkg/dist-src/error-request.js
+function isRequestError(error) {
+  return error.request !== void 0;
+}
 async function errorRequest(state, octokit, error, options) {
-  if (!error.request || !error.request.request) {
+  if (!isRequestError(error) || !error?.request.request) {
     throw error;
   }
   if (error.status >= 400 && !state.doNotRetry.includes(error.status)) {
@@ -126659,8 +126844,8 @@ async function errorRequest(state, octokit, error, options) {
 async function wrapRequest(state, octokit, request, options) {
   const limiter = new light();
   limiter.on("failed", function(error, info) {
-    const maxRetries = ~~error.request.request.retries;
-    const after = ~~error.request.request.retryAfter;
+    const maxRetries = ~~error.request.request?.retries;
+    const after = ~~error.request.request?.retryAfter;
     options.request.retryCount = info.retryCount + 1;
     if (maxRetries > info.retryCount) {
       return after * state.retryAfterBaseValue;
@@ -126672,7 +126857,7 @@ async function wrapRequest(state, octokit, request, options) {
   );
 }
 async function requestWithGraphqlErrorHandling(state, octokit, request, options) {
-  const response = await request(request, options);
+  const response = await request(options);
   if (response.data && response.data.errors && response.data.errors.length > 0 && /Something went wrong while executing your query/.test(
     response.data.errors[0].message
   )) {
@@ -126696,11 +126881,7 @@ function retry(octokit, octokitOptions) {
     },
     octokitOptions.retry
   );
-  if (state.enabled) {
-    octokit.hook.error("request", errorRequest.bind(null, state, octokit));
-    octokit.hook.wrap("request", wrapRequest.bind(null, state, octokit));
-  }
-  return {
+  const retryPlugin = {
     retry: {
       retryRequest: (error, retries, retryAfter) => {
         error.request.request = Object.assign({}, error.request.request, {
@@ -126711,6 +126892,11 @@ function retry(octokit, octokitOptions) {
       }
     }
   };
+  if (state.enabled) {
+    octokit.hook.error("request", errorRequest.bind(null, state, retryPlugin));
+    octokit.hook.wrap("request", wrapRequest.bind(null, state, retryPlugin));
+  }
+  return retryPlugin;
 }
 retry.VERSION = plugin_retry_dist_bundle_VERSION;
 

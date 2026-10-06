@@ -1,8 +1,8 @@
 ---
 name: "@octokit/endpoint"
-version: 11.0.2
+version: 11.0.3
 type: npm
-summary: Turns REST API endpoints into generic request options
+summary:
 homepage:
 license: mit
 licenses:
