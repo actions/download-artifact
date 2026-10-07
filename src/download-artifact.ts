@@ -246,6 +246,40 @@ export async function run(): Promise<void> {
   core.info('Download artifact has finished successfully')
 }
 
-run().catch(err =>
-  core.setFailed(`Unable to download artifact(s): ${err.message}`)
-)
+/**
+ * The API returns `Resource not accessible by integration` whenever the token
+ * is missing a scope, without saying which one. Reading an artifact from a
+ * different workflow run needs `actions: read`, and that is not included once
+ * a workflow declares its own `permissions:` block, so the failure is easy to
+ * hit and hard to diagnose from the message alone.
+ *
+ * The README documents `actions:read` only in the cross-repository example,
+ * next to a PAT. The same requirement applies within one repository when
+ * `run-id` is used with the default `GITHUB_TOKEN`, which is where this is
+ * most likely to be met.
+ */
+export function describeDownloadFailure(message: string): string {
+  const base = `Unable to download artifact(s): ${message}`
+
+  if (!/resource not accessible by integration/i.test(message)) {
+    return base
+  }
+
+  return [
+    base,
+    '',
+    'This usually means the token is missing the `actions: read` permission,',
+    'which is required to read artifacts from another workflow run.',
+    '',
+    'If the job declares a `permissions:` block, add:',
+    '',
+    '    permissions:',
+    '      actions: read',
+    '',
+    'For an artifact in a different repository, the `github-token` input needs',
+    'a token with `actions:read` on that repository. See the README section',
+    '"Download Artifacts from other Workflow Runs or Repositories".'
+  ].join('\n')
+}
+
+run().catch(err => core.setFailed(describeDownloadFailure(err.message)))
