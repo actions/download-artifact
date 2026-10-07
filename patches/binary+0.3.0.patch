@@ -1,0 +1,22 @@
+diff --git a/node_modules/binary/index.js b/node_modules/binary/index.js
+index bf2ba4b..1b380fe 100644
+--- a/node_modules/binary/index.js
++++ b/node_modules/binary/index.js
+@@ -151,7 +151,7 @@ exports.stream = function (input) {
+         
+         self.scan = function find (name, search) {
+             if (typeof search === 'string') {
+-                search = new Buffer(search);
++                search = Buffer.from(search);
+             }
+             else if (!Buffer.isBuffer(search)) {
+                 throw new Error('search must be a Buffer or a string');
+@@ -291,7 +291,7 @@ exports.parse = function parse (buffer) {
+     
+     self.scan = function (name, search) {
+         if (typeof search === 'string') {
+-            search = new Buffer(search);
++            search = Buffer.from(search);
+         }
+         else if (!Buffer.isBuffer(search)) {
+             throw new Error('search must be a Buffer or a string');
