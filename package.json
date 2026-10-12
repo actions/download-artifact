@@ -9,6 +9,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "postinstall": "patch-package",
     "release": "ncc build src/download-artifact.ts && git add -f dist/",
     "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:build\"",
     "format": "prettier --write **/*.ts",
@@ -35,7 +36,8 @@
   "dependencies": {
     "@actions/artifact": "^6.3.1",
     "@actions/core": "^3.0.0",
-    "minimatch": "^10.1.1"
+    "minimatch": "^10.1.1",
+    "patch-package": "^8.0.1"
   },
   "devDependencies": {
     "@actions/github": "^9.0.0",
