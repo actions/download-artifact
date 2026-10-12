@@ -1,6 +1,6 @@
 {
   "name": "download-artifact",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "description": "Download an Actions Artifact from a workflow run",
   "type": "module",
   "engines": {
@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/actions/download-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^6.2.1",
+    "@actions/artifact": "^6.3.1",
     "@actions/core": "^3.0.0",
     "minimatch": "^10.1.1",
     "patch-package": "^8.0.1"
