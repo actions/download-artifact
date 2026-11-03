@@ -154,6 +154,50 @@ describe('download', () => {
     expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(2)
   })
 
+  test('starts at most five artifact downloads concurrently', async () => {
+    mockInputs({[Inputs.Name]: '', [Inputs.Pattern]: ''})
+    const artifacts = Array.from({length: 12}, (_, id) => ({
+      id,
+      name: `artifact-${id}`,
+      size: 1024,
+      digest: `digest-${id}`
+    }))
+    jest.spyOn(artifact.default, 'listArtifacts').mockResolvedValue({artifacts})
+    let active = 0
+    let peak = 0
+    const download = jest
+      .spyOn(artifact.default, 'downloadArtifact')
+      .mockImplementation(async () => {
+        peak = Math.max(peak, ++active)
+        await new Promise<void>(resolve => setImmediate(resolve))
+        active--
+        return {digestMismatch: false}
+      })
+
+    await run()
+
+    expect(peak).toBe(5)
+    expect(active).toBe(0)
+    expect(download).toHaveBeenCalledTimes(12)
+  })
+
+  test('does not start later batches after a download fails', async () => {
+    mockInputs({[Inputs.Name]: '', [Inputs.Pattern]: ''})
+    const artifacts = Array.from({length: 12}, (_, id) => ({
+      id,
+      name: `artifact-${id}`,
+      size: 1024,
+      digest: `digest-${id}`
+    }))
+    jest.spyOn(artifact.default, 'listArtifacts').mockResolvedValue({artifacts})
+    const download = jest
+      .spyOn(artifact.default, 'downloadArtifact')
+      .mockRejectedValue(new Error('download failed'))
+
+    await expect(run()).rejects.toThrow('download failed')
+    expect(download).toHaveBeenCalledTimes(5)
+  })
+
   test('sets download path output even when no artifacts are found', async () => {
     mockInputs({[Inputs.Name]: ''})
 
