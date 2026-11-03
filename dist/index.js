@@ -129609,9 +129609,9 @@ async function run() {
             info(`- ${artifact.name} (ID: ${artifact.id}, Size: ${artifact.size}, Expected Digest: ${artifact.digest})`);
         });
     }
-    const downloadPromises = artifacts.map(artifact => ({
+    const downloads = artifacts.map(artifact => ({
         name: artifact.name,
-        promise: lib_artifact.downloadArtifact(artifact.id, {
+        download: () => lib_artifact.downloadArtifact(artifact.id, {
             ...options,
             path: isSingleArtifactDownload ||
                 inputs.mergeMultiple ||
@@ -129622,10 +129622,10 @@ async function run() {
             skipDecompress: inputs.skipDecompress
         })
     }));
-    const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS);
+    const chunkedDownloads = chunk(downloads, PARALLEL_DOWNLOADS);
     const digestMismatches = [];
-    for (const chunk of chunkedPromises) {
-        const chunkPromises = chunk.map(item => item.promise);
+    for (const chunk of chunkedDownloads) {
+        const chunkPromises = chunk.map(item => item.download());
         const results = await Promise.all(chunkPromises);
         for (let i = 0; i < results.length; i++) {
             const outcome = results[i];
