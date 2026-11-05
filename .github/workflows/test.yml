@@ -63,14 +63,14 @@ jobs:
         path: path/to/artifact-B
 
     # Test downloading a single artifact
-    - name: Download artifact A
+    - name: Download artifact A (absolute path)
       uses: ./
       with:
         name: Artifact-A-${{ matrix.runs-on }}
         path: some/new/path
 
     # Test downloading an artifact using tilde expansion
-    - name: Download artifact A
+    - name: Download artifact A (tilde expansion)
       uses: ./
       with:
         name: Artifact-A-${{ matrix.runs-on }}
@@ -131,3 +131,192 @@ jobs:
             Write-Error "File contents of downloaded artifacts are incorrect"
         }
       shell: pwsh
+
+    # Test downloading artifact without decompressing (skip-decompress)
+    - name: Download artifact A without decompressing
+      uses: ./
+      with:
+        name: Artifact-A-${{ matrix.runs-on }}
+        path: skip-decompress-test
+        skip-decompress: true
+
+    - name: Verify skip-decompress download
+      run: |
+        $rawFile = "skip-decompress-test/Artifact-A-${{ matrix.runs-on }}.zip"
+        if(!(Test-Path -path $rawFile))
+        {
+            Write-Error "Expected raw artifact file does not exist at $rawFile"
+        }
+        $fileInfo = Get-Item $rawFile
+        if($fileInfo.Length -eq 0)
+        {
+            Write-Error "Downloaded artifact file is empty"
+        }
+        Write-Host "Successfully downloaded artifact without decompressing: $rawFile (size: $($fileInfo.Length) bytes)"
+      shell: pwsh
+
+    # Regression test for artifact filename vs content-type mismatch
+    # When an archived artifact has a name with a file extension that doesn't
+    # match the blob type (e.g. "report.txt" but blob is zip), the server
+    # should append .zip to the content-disposition filename.
+    - name: Create and upload archived artifact with misleading extension
+      shell: bash
+      run: |
+        mkdir -p path/to/extension-test
+        echo '{"key": "value"}' > path/to/extension-test/data.json
+    - uses: actions/upload-artifact@v4 # V4 is important here to ensure we're supporting older versions correctly
+      with:
+        name: report.txt-${{ matrix.runs-on }}.json
+        path: path/to/extension-test/data.json
+
+    - name: Download misleading-extension artifact without decompressing
+      uses: ./
+      with:
+        name: report.txt-${{ matrix.runs-on }}.json
+        path: ext-test/raw
+        skip-decompress: true
+
+    - name: Verify downloaded file has .zip extension appended
+      shell: bash
+      run: |
+        expected="ext-test/raw/report.txt-${{ matrix.runs-on }}.json.zip"
+        if [ -f "$expected" ]; then
+          echo "PASS: Downloaded file has .zip appended: $expected"
+        else
+          echo "FAIL: Expected $expected but got:"
+          ls -al ext-test/raw/
+          exit 1
+        fi
+
+    # Test uploading and downloading artifacts with CJK (Chinese, Japanese, Korean) characters
+    # Regression test: certain non-ASCII chars (e.g. U+571F 土) caused 400 errors from
+    # Azure Blob Storage due to encoding issues in the Content-Disposition / rscd parameter
+    - name: Create artifacts with CJK names
+      shell: bash
+      run: |
+        mkdir -p path/to/cjk-artifacts
+        # Chinese - 土 (U+571F) known to fail, 日 (U+65E5) known to work
+        echo "Content for 土" > "path/to/cjk-artifacts/file-土-${{ matrix.runs-on }}.txt"
+        echo "Content for 中文测试" > "path/to/cjk-artifacts/file-中文测试-${{ matrix.runs-on }}.txt"
+        # Japanese - katakana and kanji
+        echo "Content for テスト" > "path/to/cjk-artifacts/file-テスト-${{ matrix.runs-on }}.txt"
+        echo "Content for 東京タワー" > "path/to/cjk-artifacts/file-東京タワー-${{ matrix.runs-on }}.txt"
+        # Korean - Hangul
+        echo "Content for 테스트" > "path/to/cjk-artifacts/file-테스트-${{ matrix.runs-on }}.txt"
+        echo "Content for 서울시" > "path/to/cjk-artifacts/file-서울시-${{ matrix.runs-on }}.txt"
+
+    - name: Upload CJK artifact - Chinese 土
+      uses: actions/upload-artifact@v7
+      with:
+        path: path/to/cjk-artifacts/file-土-${{ matrix.runs-on }}.txt
+        archive: false
+
+    - name: Upload CJK artifact - Chinese 中文测试
+      uses: actions/upload-artifact@v7
+      with:
+        path: path/to/cjk-artifacts/file-中文测试-${{ matrix.runs-on }}.txt
+        archive: false
+
+    - name: Upload CJK artifact - Japanese テスト
+      uses: actions/upload-artifact@v7
+      with:
+        path: path/to/cjk-artifacts/file-テスト-${{ matrix.runs-on }}.txt
+        archive: false
+
+    - name: Upload CJK artifact - Japanese 東京タワー
+      uses: actions/upload-artifact@v7
+      with:
+        path: path/to/cjk-artifacts/file-東京タワー-${{ matrix.runs-on }}.txt
+        archive: false
+
+    - name: Upload CJK artifact - Korean 테스트
+      uses: actions/upload-artifact@v7
+      with:
+        path: path/to/cjk-artifacts/file-테스트-${{ matrix.runs-on }}.txt
+        archive: false
+
+    - name: Upload CJK artifact - Korean 서울시
+      uses: actions/upload-artifact@v7
+      with:
+        path: path/to/cjk-artifacts/file-서울시-${{ matrix.runs-on }}.txt
+        archive: false
+
+    - name: Download CJK artifact - Chinese 土
+      uses: ./
+      with:
+        name: file-土-${{ matrix.runs-on }}.txt
+        path: cjk-download/土
+
+    - name: Download CJK artifact - Chinese 中文测试
+      uses: ./
+      with:
+        name: file-中文测试-${{ matrix.runs-on }}.txt
+        path: cjk-download/中文测试
+
+    - name: Download CJK artifact - Japanese テスト
+      uses: ./
+      with:
+        name: file-テスト-${{ matrix.runs-on }}.txt
+        path: cjk-download/テスト
+
+    - name: Download CJK artifact - Japanese 東京タワー
+      uses: ./
+      with:
+        name: file-東京タワー-${{ matrix.runs-on }}.txt
+        path: cjk-download/東京タワー
+
+    - name: Download CJK artifact - Korean 테스트
+      uses: ./
+      with:
+        name: file-테스트-${{ matrix.runs-on }}.txt
+        path: cjk-download/테스트
+
+    - name: Download CJK artifact - Korean 서울시
+      uses: ./
+      with:
+        name: file-서울시-${{ matrix.runs-on }}.txt
+        path: cjk-download/서울시
+
+    - name: Verify CJK artifact downloads
+      shell: bash
+      run: |
+        set -e
+        fail=0
+
+        check_file() {
+          local file="$1"
+          local expected="$2"
+          if [ ! -f "$file" ]; then
+            echo "FAIL: Missing file: $file"
+            fail=1
+            return
+          fi
+          actual=$(cat "$file")
+          if [ "$actual" != "$expected" ]; then
+            echo "FAIL: Content mismatch in $file"
+            echo "  Expected: '$expected'"
+            echo "  Got:      '$actual'"
+            fail=1
+            return
+          fi
+          echo "PASS: $file"
+        }
+
+        echo "=== Chinese ==="
+        check_file "cjk-download/土/file-土-${{ matrix.runs-on }}.txt" "Content for 土"
+        check_file "cjk-download/中文测试/file-中文测试-${{ matrix.runs-on }}.txt" "Content for 中文测试"
+
+        echo "=== Japanese ==="
+        check_file "cjk-download/テスト/file-テスト-${{ matrix.runs-on }}.txt" "Content for テスト"
+        check_file "cjk-download/東京タワー/file-東京タワー-${{ matrix.runs-on }}.txt" "Content for 東京タワー"
+
+        echo "=== Korean ==="
+        check_file "cjk-download/테스트/file-테스트-${{ matrix.runs-on }}.txt" "Content for 테스트"
+        check_file "cjk-download/서울시/file-서울시-${{ matrix.runs-on }}.txt" "Content for 서울시"
+
+        if [ "$fail" -ne 0 ]; then
+          echo "Some CJK artifact checks failed"
+          ls -alR cjk-download/ || true
+          exit 1
+        fi
+        echo "All CJK artifact downloads verified successfully"
