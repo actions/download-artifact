@@ -1,9 +1,9 @@
 ---
 name: minimist
-version: 1.2.6
+version: 1.2.8
 type: npm
 summary: parse argument options
-homepage: https://github.com/substack/minimist
+homepage: https://github.com/minimistjs/minimist
 license: other
 licenses:
 - sources: LICENSE
@@ -26,6 +26,19 @@ licenses:
     COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-- sources: readme.markdown
-  text: MIT
+- sources: README.md
+  text: |-
+    MIT
+
+    [package-url]: https://npmjs.org/package/minimist
+    [npm-version-svg]: https://versionbadg.es/minimistjs/minimist.svg
+    [npm-badge-png]: https://nodei.co/npm/minimist.png?downloads=true&stars=true
+    [license-image]: https://img.shields.io/npm/l/minimist.svg
+    [license-url]: LICENSE
+    [downloads-image]: https://img.shields.io/npm/dm/minimist.svg
+    [downloads-url]: https://npm-stat.com/charts.html?package=minimist
+    [codecov-image]: https://codecov.io/gh/minimistjs/minimist/branch/main/graphs/badge.svg
+    [codecov-url]: https://app.codecov.io/gh/minimistjs/minimist/
+    [actions-image]: https://img.shields.io/endpoint?url=https://github-actions-badge-u3jn4tfpocch.runkit.sh/minimistjs/minimist
+    [actions-url]: https://github.com/minimistjs/minimist/actions
 notices: []
