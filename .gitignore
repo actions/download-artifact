@@ -3,5 +3,3 @@ node_modules/
 
 # Ignore js files that are transpiled from ts files in src/
 lib/
-
-.DS_Store

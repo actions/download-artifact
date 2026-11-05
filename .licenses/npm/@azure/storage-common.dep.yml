@@ -1,9 +1,9 @@
 ---
 name: "@azure/storage-common"
-version: 12.3.0
+version: 12.1.1
 type: npm
-summary:
-homepage:
+summary: Azure Storage Common Client Library for JavaScript
+homepage: https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/storage/storage-internal-avro/
 license: mit
 licenses:
 - sources: LICENSE

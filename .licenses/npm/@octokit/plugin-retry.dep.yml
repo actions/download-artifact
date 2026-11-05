@@ -1,8 +1,8 @@
 ---
 name: "@octokit/plugin-retry"
-version: 8.1.0
+version: 3.0.9
 type: npm
-summary:
+summary: Automatic retry plugin for octokit
 homepage:
 license: mit
 licenses:
