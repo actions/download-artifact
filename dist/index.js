@@ -77648,6 +77648,8 @@ __nccwpck_require__.d(mappers_namespaceObject, {
 var external_os_ = __nccwpck_require__(857);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(6928);
+;// CONCATENATED MODULE: external "node:timers/promises"
+const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:timers/promises");
 ;// CONCATENATED MODULE: ./node_modules/@actions/core/lib/utils.js
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -121966,7 +121968,7 @@ function uploadToBlobStorage(authenticatedUploadURL, uploadStream, contentType) 
 }
 //# sourceMappingURL=blob-upload.js.map
 ;// CONCATENATED MODULE: external "fs/promises"
-const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
+const external_fs_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
 // EXTERNAL MODULE: ./node_modules/archiver/index.js
 var archiver = __nccwpck_require__(9392);
 ;// CONCATENATED MODULE: ./node_modules/@actions/artifact/lib/internal/upload/stream.js
@@ -122006,7 +122008,7 @@ function createRawFileUploadStream(filePath) {
         let sourcePath = filePath;
         const stats = yield external_fs_.promises.lstat(filePath);
         if (stats.isSymbolicLink()) {
-            sourcePath = yield (0,promises_namespaceObject.realpath)(filePath);
+            sourcePath = yield (0,external_fs_promises_namespaceObject.realpath)(filePath);
         }
         // Create a read stream from the file and pipe it to the upload stream
         const fileStream = external_fs_.createReadStream(sourcePath, {
@@ -122055,7 +122057,7 @@ function createZipUploadStream(uploadSpecification_1) {
                 // Check if symlink and resolve the source path
                 let sourcePath = file.sourcePath;
                 if (file.stats.isSymbolicLink()) {
-                    sourcePath = yield (0,promises_namespaceObject.realpath)(file.sourcePath);
+                    sourcePath = yield (0,external_fs_promises_namespaceObject.realpath)(file.sourcePath);
                 }
                 // Add the file to the zip
                 zip.file(sourcePath, {
@@ -126556,7 +126558,7 @@ const scrubQueryParameters = (url) => {
 function download_artifact_exists(path) {
     return download_artifact_awaiter(this, void 0, void 0, function* () {
         try {
-            yield promises_namespaceObject.access(path);
+            yield external_fs_promises_namespaceObject.access(path);
             return true;
         }
         catch (error) {
@@ -126753,7 +126755,7 @@ function resolveOrCreateDirectory() {
     return download_artifact_awaiter(this, arguments, void 0, function* (downloadPath = getGitHubWorkspaceDir()) {
         if (!(yield download_artifact_exists(downloadPath))) {
             core_debug(`Artifact destination folder does not exist, creating: ${downloadPath}`);
-            yield promises_namespaceObject.mkdir(downloadPath, { recursive: true });
+            yield external_fs_promises_namespaceObject.mkdir(downloadPath, { recursive: true });
         }
         else {
             core_debug(`Artifact destination folder already exists: ${downloadPath}`);
@@ -129482,12 +129484,37 @@ var Outputs;
 
 
 
+
 const PARALLEL_DOWNLOADS = 5;
 const chunk = (arr, n) => arr.reduce((acc, cur, i) => {
     const index = Math.floor(i / n);
     acc[index] = [...(acc[index] || []), cur];
     return acc;
 }, []);
+async function retryArtifactRequest(request, { isReady = () => true, retryRestNotFound = false } = {}) {
+    const maxAttempts = 5;
+    for (let attempt = 1;; attempt++) {
+        try {
+            const response = await request();
+            if (isReady(response) || attempt === maxAttempts) {
+                return response;
+            }
+        }
+        catch (error) {
+            const unavailable = error instanceof ArtifactNotFoundError ||
+                (retryRestNotFound &&
+                    error instanceof Error &&
+                    'status' in error &&
+                    error.status === 404);
+            if (!unavailable || attempt === maxAttempts) {
+                throw error;
+            }
+        }
+        const delay = 1000 * 2 ** (attempt - 1);
+        info(`Artifact not available yet. Retrying in ${delay}ms (${attempt}/${maxAttempts}).`);
+        await (0,promises_namespaceObject.setTimeout)(delay);
+    }
+}
 async function run() {
     const inputs = {
         name: getInput(Inputs.Name, { required: false }),
@@ -129542,7 +129569,7 @@ async function run() {
     let artifactIds = [];
     if (isSingleArtifactDownload) {
         info(`Downloading single artifact`);
-        const { artifact: targetArtifact } = await lib_artifact.getArtifact(inputs.name, options);
+        const { artifact: targetArtifact } = await retryArtifactRequest(() => lib_artifact.getArtifact(inputs.name, options));
         if (!targetArtifact) {
             throw new Error(`Artifact '${inputs.name}' not found`);
         }
@@ -129568,9 +129595,8 @@ async function run() {
             return numericId;
         });
         // We need to fetch all artifacts to get metadata for the specified IDs
-        const listArtifactResponse = await lib_artifact.listArtifacts({
-            latest: true,
-            ...options
+        const listArtifactResponse = await retryArtifactRequest(() => lib_artifact.listArtifacts({ latest: true, ...options }), {
+            isReady: response => artifactIds.every(id => response.artifacts.some(artifact => artifact.id === id))
         });
         artifacts = listArtifactResponse.artifacts.filter(artifact => artifactIds.includes(artifact.id));
         if (artifacts.length === 0) {
@@ -129611,7 +129637,8 @@ async function run() {
     }
     const downloadPromises = artifacts.map(artifact => ({
         name: artifact.name,
-        promise: lib_artifact.downloadArtifact(artifact.id, {
+        // An artifact can disappear between discovery and the download lookup.
+        promise: retryArtifactRequest(() => lib_artifact.downloadArtifact(artifact.id, {
             ...options,
             path: isSingleArtifactDownload ||
                 inputs.mergeMultiple ||
@@ -129620,7 +129647,7 @@ async function run() {
                 : external_path_.join(resolvedPath, artifact.name),
             expectedHash: artifact.digest,
             skipDecompress: inputs.skipDecompress
-        })
+        }), { retryRestNotFound: Boolean(options.findBy) })
     }));
     const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS);
     const digestMismatches = [];

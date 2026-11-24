@@ -1,6 +1,11 @@
 import {jest, describe, test, expect, beforeEach} from '@jest/globals'
 import * as path from 'path'
 
+const sleep = jest
+  .fn<(delay: number) => Promise<void>>()
+  .mockResolvedValue(undefined)
+jest.unstable_mockModule('node:timers/promises', () => ({setTimeout: sleep}))
+
 // Mock @actions/github before importing modules that use it
 jest.unstable_mockModule('@actions/github', () => ({
   context: {
@@ -111,6 +116,7 @@ describe('download', () => {
       })
     )
     expect(core.info).toHaveBeenCalledWith('Total of 1 artifact(s) downloaded')
+    expect(sleep).not.toHaveBeenCalled()
 
     expect(core.setOutput).toHaveBeenCalledWith(
       'download-path',
@@ -253,6 +259,8 @@ describe('download', () => {
     await expect(run()).rejects.toThrow(
       'Digest validation failed for artifact(s): corrupted-artifact'
     )
+    expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
+    expect(sleep).not.toHaveBeenCalled()
   })
 
   test('warns when digest validation fails with digest-mismatch set to warn', async () => {
@@ -431,6 +439,10 @@ describe('download', () => {
       'Could not find the following artifact IDs: 456, 789'
     )
     expect(core.debug).toHaveBeenCalledWith('Found 1 artifacts by ID')
+    expect(artifact.default.listArtifacts).toHaveBeenCalledTimes(5)
+    expect(sleep.mock.calls.map(([delay]) => delay)).toEqual([
+      1000, 2000, 4000, 8000
+    ])
     expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
   })
 
@@ -450,6 +462,12 @@ describe('download', () => {
     await expect(run()).rejects.toThrow(
       'None of the provided artifact IDs were found'
     )
+    expect(artifact.default.listArtifacts).toHaveBeenCalledTimes(5)
+    expect(sleep.mock.calls.map(([delay]) => delay)).toEqual([
+      1000, 2000, 4000, 8000
+    ])
+    expect(artifact.default.downloadArtifact).not.toHaveBeenCalled()
+    expect(core.setOutput).not.toHaveBeenCalled()
   })
 
   test('throws error when artifact-ids input is empty', async () => {
@@ -518,6 +536,144 @@ describe('download', () => {
         path: path.resolve(testPath), // Should be the resolved path directly, not nested
         expectedHash: mockArtifact.digest
       })
+    )
+  })
+
+  describe('artifact availability', () => {
+    const first = {id: 123, name: 'first', size: 1024, digest: 'abc123'}
+    const second = {id: 456, name: 'second', size: 2048, digest: 'def456'}
+
+    test('retries a named artifact that becomes visible after upload', async () => {
+      jest
+        .spyOn(artifact.default, 'getArtifact')
+        .mockRejectedValueOnce(new ArtifactNotFoundError())
+        .mockResolvedValue({artifact: first})
+
+      await run()
+
+      expect(sleep.mock.calls.map(([delay]) => delay)).toEqual([1000])
+      expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(1)
+      expect(core.setOutput).toHaveBeenCalledWith(
+        'download-path',
+        expect.any(String)
+      )
+    })
+
+    test('retries until all requested IDs appear instead of accepting a partial listing', async () => {
+      mockInputs({[Inputs.Name]: '', [Inputs.ArtifactIds]: '123,456'})
+      jest
+        .spyOn(artifact.default, 'listArtifacts')
+        .mockResolvedValueOnce({artifacts: []})
+        .mockResolvedValueOnce({artifacts: [first]})
+        .mockResolvedValue({artifacts: [first, second]})
+
+      await run()
+
+      expect(sleep.mock.calls.map(([delay]) => delay)).toEqual([1000, 2000])
+      expect(artifact.default.downloadArtifact).toHaveBeenCalledTimes(2)
+      expect(core.warning).not.toHaveBeenCalled()
+      expect(core.info).toHaveBeenCalledWith(
+        'Total of 2 artifact(s) downloaded'
+      )
+    })
+
+    test.each([
+      {failure: new ArtifactNotFoundError(), token: '', transport: 'runtime'},
+      {
+        failure: Object.assign(new Error('Not Found'), {status: 404}),
+        token: 'test-token',
+        transport: 'REST'
+      }
+    ])(
+      'retries a missing $transport download after discovery without repeating completed artifacts',
+      async ({failure, token}) => {
+        mockInputs({
+          [Inputs.Name]: '',
+          [Inputs.ArtifactIds]: '123,456',
+          [Inputs.GitHubToken]: token,
+          [Inputs.SkipDecompress]: true
+        })
+        jest
+          .spyOn(artifact.default, 'listArtifacts')
+          .mockResolvedValue({artifacts: [first, second]})
+        let firstAttempts = 0
+        jest
+          .spyOn(artifact.default, 'downloadArtifact')
+          .mockImplementation(async id => {
+            if (id === first.id && firstAttempts++ === 0) throw failure
+            return {digestMismatch: false}
+          })
+
+        await run()
+
+        const calls = jest.mocked(artifact.default.downloadArtifact).mock.calls
+        expect(calls.filter(([id]) => id === first.id)).toHaveLength(2)
+        expect(calls.filter(([id]) => id === second.id)).toHaveLength(1)
+        expect(calls.filter(([id]) => id === first.id)[0]).toEqual(
+          calls.filter(([id]) => id === first.id)[1]
+        )
+        expect(artifact.default.downloadArtifact).toHaveBeenCalledWith(
+          first.id,
+          expect.objectContaining({
+            expectedHash: first.digest,
+            skipDecompress: true
+          })
+        )
+        expect(sleep.mock.calls.map(([delay]) => delay)).toEqual([1000])
+        expect(core.setOutput).toHaveBeenCalledWith(
+          'download-path',
+          expect.any(String)
+        )
+      }
+    )
+
+    test.each(['lookup', 'download'])(
+      'bounds retries for a permanently missing artifact during %s',
+      async stage => {
+        const failure = new ArtifactNotFoundError('Permanently missing')
+        const get = jest
+          .spyOn(artifact.default, 'getArtifact')
+          .mockResolvedValue({artifact: first})
+        const download = jest.spyOn(artifact.default, 'downloadArtifact')
+        const failingRequest = stage === 'lookup' ? get : download
+        failingRequest.mockRejectedValue(failure)
+
+        await expect(run()).rejects.toBe(failure)
+
+        expect(failingRequest).toHaveBeenCalledTimes(5)
+        expect(sleep.mock.calls.map(([delay]) => delay)).toEqual([
+          1000, 2000, 4000, 8000
+        ])
+        expect(core.setOutput).not.toHaveBeenCalled()
+      }
+    )
+
+    test.each([
+      {stage: 'lookup', status: 403},
+      {stage: 'lookup', status: 404},
+      {stage: 'download', status: 403},
+      {stage: 'download', status: undefined}
+    ])(
+      'does not retry other errors from $stage (status $status)',
+      async ({stage, status}) => {
+        const failure = Object.assign(
+          new Error('Request or extraction failed'),
+          {status}
+        )
+        mockInputs({[Inputs.Name]: '', [Inputs.ArtifactIds]: '123'})
+        const list = jest
+          .spyOn(artifact.default, 'listArtifacts')
+          .mockResolvedValue({artifacts: [first]})
+        const download = jest.spyOn(artifact.default, 'downloadArtifact')
+        const failingRequest = stage === 'lookup' ? list : download
+        failingRequest.mockRejectedValue(failure)
+
+        await expect(run()).rejects.toBe(failure)
+
+        expect(failingRequest).toHaveBeenCalledTimes(1)
+        expect(sleep).not.toHaveBeenCalled()
+        expect(core.setOutput).not.toHaveBeenCalled()
+      }
     )
   })
 
