@@ -1,7 +1,8 @@
 import * as os from 'os'
 import * as path from 'path'
+import {setTimeout as sleep} from 'node:timers/promises'
 import * as core from '@actions/core'
-import artifactClient from '@actions/artifact'
+import artifactClient, {ArtifactNotFoundError} from '@actions/artifact'
 import type {Artifact, FindOptions} from '@actions/artifact'
 import {Minimatch} from 'minimatch'
 import {Inputs, Outputs, DigestMismatchBehavior} from './constants.js'
@@ -14,6 +15,43 @@ export const chunk = <T>(arr: T[], n: number): T[][] =>
     acc[index] = [...(acc[index] || []), cur]
     return acc
   }, [] as T[][])
+
+async function retryArtifactRequest<T>(
+  request: () => Promise<T>,
+  {
+    isReady = () => true,
+    retryRestNotFound = false
+  }: {
+    isReady?: (response: T) => boolean
+    retryRestNotFound?: boolean
+  } = {}
+): Promise<T> {
+  const maxAttempts = 5
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await request()
+      if (isReady(response) || attempt === maxAttempts) {
+        return response
+      }
+    } catch (error) {
+      const unavailable =
+        error instanceof ArtifactNotFoundError ||
+        (retryRestNotFound &&
+          error instanceof Error &&
+          'status' in error &&
+          error.status === 404)
+      if (!unavailable || attempt === maxAttempts) {
+        throw error
+      }
+    }
+
+    const delay = 1000 * 2 ** (attempt - 1)
+    core.info(
+      `Artifact not available yet. Retrying in ${delay}ms (${attempt}/${maxAttempts}).`
+    )
+    await sleep(delay)
+  }
+}
 
 export async function run(): Promise<void> {
   const inputs = {
@@ -85,9 +123,8 @@ export async function run(): Promise<void> {
   if (isSingleArtifactDownload) {
     core.info(`Downloading single artifact`)
 
-    const {artifact: targetArtifact} = await artifactClient.getArtifact(
-      inputs.name,
-      options
+    const {artifact: targetArtifact} = await retryArtifactRequest(() =>
+      artifactClient.getArtifact(inputs.name, options)
     )
 
     if (!targetArtifact) {
@@ -123,10 +160,15 @@ export async function run(): Promise<void> {
     })
 
     // We need to fetch all artifacts to get metadata for the specified IDs
-    const listArtifactResponse = await artifactClient.listArtifacts({
-      latest: true,
-      ...options
-    })
+    const listArtifactResponse = await retryArtifactRequest(
+      () => artifactClient.listArtifacts({latest: true, ...options}),
+      {
+        isReady: response =>
+          artifactIds.every(id =>
+            response.artifacts.some(artifact => artifact.id === id)
+          )
+      }
+    )
 
     artifacts = listArtifactResponse.artifacts.filter(artifact =>
       artifactIds.includes(artifact.id)
@@ -184,17 +226,22 @@ export async function run(): Promise<void> {
 
   const downloadPromises = artifacts.map(artifact => ({
     name: artifact.name,
-    promise: artifactClient.downloadArtifact(artifact.id, {
-      ...options,
-      path:
-        isSingleArtifactDownload ||
-        inputs.mergeMultiple ||
-        artifacts.length === 1
-          ? resolvedPath
-          : path.join(resolvedPath, artifact.name),
-      expectedHash: artifact.digest,
-      skipDecompress: inputs.skipDecompress
-    })
+    // An artifact can disappear between discovery and the download lookup.
+    promise: retryArtifactRequest(
+      () =>
+        artifactClient.downloadArtifact(artifact.id, {
+          ...options,
+          path:
+            isSingleArtifactDownload ||
+            inputs.mergeMultiple ||
+            artifacts.length === 1
+              ? resolvedPath
+              : path.join(resolvedPath, artifact.name),
+          expectedHash: artifact.digest,
+          skipDecompress: inputs.skipDecompress
+        }),
+      {retryRestNotFound: Boolean(options.findBy)}
+    )
   }))
 
   const chunkedPromises = chunk(downloadPromises, PARALLEL_DOWNLOADS)
